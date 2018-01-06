@@ -13,7 +13,14 @@ func TestCalculator_Calculate(t *testing.T) {
 		Elevation:            7.9,
 		CalculationMethod:    Default,
 		AsrCalculationMethod: Shafii,
-		UseIhtiyat:           true,
+		AdhanCorrections: TimeCorrections{
+			Fajr:    2 * time.Minute,
+			Sunrise: -2 * time.Minute,
+			Zuhr:    3 * time.Minute,
+			Asr:     2 * time.Minute,
+			Maghrib: 2 * time.Minute,
+			Isha:    2 * time.Minute,
+		},
 	}
 
 	location := time.FixedZone("Jakarta", 7*3600)

@@ -72,7 +72,6 @@ type Calculator struct {
 	Elevation            float64
 	CalculationMethod    CalculationMethod
 	AsrCalculationMethod AsrCalculationMethod
-	UseIhtiyat           bool
 	AdhanCorrections     TimeCorrections
 	TimesToIqama         TimeCorrections
 
@@ -165,32 +164,12 @@ func (calc Calculator) getAdhanTime(date time.Time, altitude float64, prayer Typ
 	}
 
 	// Calculate adhan time
+	minutes := math.Floor((calc.transitTime+hourAngle/15.0)*60 + 0.5)
 	year := date.Year()
 	month := date.Month()
 	day := date.Day()
 	location := date.Location()
 
-	adhanTime := calc.transitTime + hourAngle/15.0
-	hour := math.Floor(adhanTime)
-	minute := math.Floor((adhanTime - hour) * 60)
-	second := math.Floor((adhanTime - hour - minute/60) * 3600)
-
-	// Round up seconds to the minutes
-	if prayer != Sunrise && second > 0 {
-		minute++
-	}
-
-	// Adjust time based on if ihtiyat is used
-	if calc.UseIhtiyat {
-		if prayer == Sunrise {
-			minute -= 2
-		} else if prayer == Zuhr {
-			minute += 3
-		} else {
-			minute += 2
-		}
-	}
-
-	return time.Date(year, month, day, int(hour), int(minute), 0, 0, location).
+	return time.Date(year, month, day, 0, int(minutes), 0, 0, location).
 		Add(calc.AdhanCorrections[prayer])
 }
