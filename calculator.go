@@ -74,6 +74,8 @@ type Calculator struct {
 	AsrCalculationMethod AsrCalculationMethod
 	AdhanCorrections     TimeCorrections
 	TimesToIqama         TimeCorrections
+	FajrAngle            float64
+	IshaAngle            float64
 
 	sunDeclination float64
 	equationOfTime float64
@@ -114,6 +116,15 @@ func (calc *Calculator) Calculate(date time.Time) (Times, Times) {
 	default:
 		fajrAngle = 20.0
 		ishaAngle = 18.0
+	}
+
+	// If fajr and isha angle specified, use that
+	if calc.FajrAngle != 0 {
+		fajrAngle = calc.FajrAngle
+	}
+
+	if calc.IshaAngle != 0 {
+		ishaAngle = calc.IshaAngle
 	}
 
 	// Calculate asr coefficient
