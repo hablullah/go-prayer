@@ -2,7 +2,7 @@
 
 [![GoDoc](https://godoc.org/github.com/RadhiFadlillah/go-prayer?status.png)](https://godoc.org/github.com/RadhiFadlillah/go-prayer)
 
-Go-Prayer is a Go package for calculating prayer/salat times for a specific location and a specific date.
+Go-Prayer is a Go package for calculating prayer/salat times for a specific location at a specific date. As it is right now, this package should be able to give an accurate prayer times for **most** location in the world, except locations with high latitude, where the sun never sets.
 
 ## Usage Examples
 
@@ -21,7 +21,6 @@ func main() {
 	calculator := prayer.Calculator{
 		Latitude:             -6.1751,
 		Longitude:            106.865,
-		Elevation:            7.9,
 		CalculationMethod:    prayer.Default,
 		AsrCalculationMethod: prayer.Shafii,
 	}

@@ -10,7 +10,6 @@ func TestCalculator_Calculate(t *testing.T) {
 	calc := Calculator{
 		Latitude:             -6.1751,
 		Longitude:            106.8650,
-		Elevation:            7.9,
 		CalculationMethod:    Default,
 		AsrCalculationMethod: Shafii,
 		AdhanCorrections: TimeCorrections{

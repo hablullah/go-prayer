@@ -69,7 +69,6 @@ const (
 type Calculator struct {
 	Latitude             float64
 	Longitude            float64
-	Elevation            float64
 	CalculationMethod    CalculationMethod
 	AsrCalculationMethod AsrCalculationMethod
 	AdhanCorrections     TimeCorrections
