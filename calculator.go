@@ -138,10 +138,10 @@ func (calc *Calculator) Calculate(date time.Time) (Times, Times) {
 	// Calculate sun altitude
 	altitudes := map[Type]float64{
 		Fajr:    -fajrAngle,
-		Sunrise: -(5.0 / 6.0) - (4500.0/129683.0)*math.Sqrt(calc.Elevation),
+		Sunrise: -(5.0 / 6.0),
 		Zuhr:    0,
 		Asr:     arccot(asrCoefficient + tan(math.Abs(calc.sunDeclination-calc.Latitude))),
-		Maghrib: -(5.0 / 6.0) - (4500.0/129683.0)*math.Sqrt(calc.Elevation),
+		Maghrib: -(5.0 / 6.0),
 		Isha:    -ishaAngle,
 	}
 
