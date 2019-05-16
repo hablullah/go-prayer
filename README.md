@@ -13,40 +13,52 @@ package main
 
 import (
 	"fmt"
-	"github.com/RadhiFadlillah/go-prayer"
 	"time"
+
+	"github.com/RadhiFadlillah/go-prayer"
 )
 
 func main() {
-	calculator := prayer.Calculator{
-		Latitude:             -6.1751,
-		Longitude:            106.865,
+	cfg := prayer.Config{
+		Latitude:             -6.21,
+		Longitude:            106.85,
+		Elevation:            50,
 		CalculationMethod:    prayer.Default,
 		AsrCalculationMethod: prayer.Shafii,
+		PreciseToSeconds:     false,
+		Corrections: prayer.TimeCorrections{
+			Fajr:    2 * time.Minute,
+			Sunrise: -time.Minute,
+			Asr:     time.Minute,
+			Maghrib: time.Minute,
+			Isha:    time.Minute,
+		},
 	}
 
 	location := time.FixedZone("WIB", 7*3600)
-	date := time.Date(2018, 1, 6, 0, 0, 0, 0, location)
-	adhan, _ := calculator.Calculate(date)
+	date := time.Date(2009, 6, 12, 0, 0, 0, 0, location)
+	times := prayer.Calculate(date, cfg)
 
-	fmt.Println("Fajr:", adhan[prayer.Fajr].Format("15:04:05"))
-	fmt.Println("Sunrise:", adhan[prayer.Sunrise].Format("15:04:05"))
-	fmt.Println("Zuhr:", adhan[prayer.Zuhr].Format("15:04:05"))
-	fmt.Println("Asr:", adhan[prayer.Asr].Format("15:04:05"))
-	fmt.Println("Maghrib:", adhan[prayer.Maghrib].Format("15:04:05"))
-	fmt.Println("Isha:", adhan[prayer.Isha].Format("15:04:05"))
+	fmt.Println(date.Format("2006-01-02"))
+	fmt.Println("Fajr    =", times.Fajr.Format("15:04"))
+	fmt.Println("Sunrise =", times.Sunrise.Format("15:04"))
+	fmt.Println("Zuhr    =", times.Zuhr.Format("15:04"))
+	fmt.Println("Asr     =", times.Asr.Format("15:04"))
+	fmt.Println("Maghrib =", times.Maghrib.Format("15:04"))
+	fmt.Println("Isha    =", times.Isha.Format("15:04"))
 }
 ```
 
 Which will give us following results :
 
 ```
-Fajr: 04:20:00
-Sunrise: 05:43:00
-Zuhr: 11:59:00
-Asr: 15:25:00
-Maghrib: 18:13:00
-Isha: 19:28:00
+2009-06-12
+Fajr    = 04:38
+Sunrise = 05:58
+Zuhr    = 11:55
+Asr     = 15:16
+Maghrib = 17:48
+Isha    = 19:02
 ```
 
 ## Resource
