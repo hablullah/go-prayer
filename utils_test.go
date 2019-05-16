@@ -1,7 +1,6 @@
 package prayer
 
 import (
-	"math"
 	"testing"
 	"time"
 
@@ -25,16 +24,15 @@ func Test_getJulianDay(t *testing.T) {
 
 	for date, expected := range scenarios {
 		jd := getJulianDay(date)
-		diff := decimal.NewFromFloat(jd).
-			Sub(decimal.NewFromFloat(expected))
+		diff := jd.Sub(decimal.NewFromFloat(expected))
 
 		if !diff.Round(3).Equal(decimal.Zero) {
 			t.Errorf("\n"+
 				"date     : %s\n"+
 				"expected : %f\n"+
-				"get      : %f",
+				"get      : %s",
 				date.Format("2006-01-02 15:04:05 -07"),
-				expected, jd)
+				expected, jd.String())
 		}
 	}
 }
@@ -46,115 +44,115 @@ func Test_getEquationOfTime(t *testing.T) {
 	}
 
 	for jd, expected := range scenarios {
+		decJD := decimal.NewFromFloat(jd)
+		eoT := getEquationOfTime(decJD)
+		diff := eoT.Sub(decimal.NewFromFloat(expected))
+
+		if !diff.Round(3).Equal(decimal.Zero) {
+			t.Errorf("\n"+
+				"JD       : %s\n"+
+				"expected : %f\n"+
+				"get      : %s",
+				decJD.String(), expected, eoT.String())
+		}
+	}
+}
+
+func Test_getTimezone(t *testing.T) {
+	scenarios := map[time.Time]int64{
+		time.Date(2009, 01, 02, 0, 0, 0, 0, time.UTC):                               0,
+		time.Date(2009, 01, 02, 0, 0, 0, 0, time.FixedZone("WIB-A", 7*60*60)):       7,
+		time.Date(2009, 01, 02, 0, 0, 0, 0, time.FixedZone("WIB-B", 7*60*60+1800)):  7,
+		time.Date(2009, 01, 02, 0, 0, 0, 0, time.FixedZone("EST-A", -5*60*60)):      -5,
+		time.Date(2009, 01, 02, 0, 0, 0, 0, time.FixedZone("EST-B", -5*60*60-1800)): -5,
+	}
+
+	for date, expected := range scenarios {
+		if timezone := getTimezone(date); timezone != expected {
+			t.Errorf("\n"+
+				"location : %s\n"+
+				"expected : %d\n"+
+				"get      : %d",
+				date.Location().String(),
+				expected, timezone)
+		}
+	}
+}
+
+func Test_getTransitTime(t *testing.T) {
+	scenarios := []struct {
+		name      string
+		date      time.Time
+		longitude float64
+		expected  float64
+	}{{
+		name:      "Jakarta, 2009-06-12",
+		date:      time.Date(2009, 6, 12, 0, 0, 0, 0, time.FixedZone("WIB", 7*60*60)),
+		longitude: 106.85,
+		expected:  11.87375,
+	}}
+
+	for _, s := range scenarios {
+		date := time.Date(
+			s.date.Year(),
+			s.date.Month(),
+			s.date.Day(),
+			12, 0, 0, 0,
+			s.date.Location())
+
+		jd := getJulianDay(date)
 		eoT := getEquationOfTime(jd)
+		timezone := getTimezone(date)
+		transitTime := getTransitTime(timezone, s.longitude, eoT)
+		diff := transitTime.Sub(decimal.NewFromFloat(s.expected))
 
-		eoT = round(eoT, 3)
-		expected = round(expected, 3)
-
-		if eoT-expected != 0 {
-			t.Errorf("%f expected %f get %f", jd, expected, eoT)
+		if !diff.Round(3).Equal(decimal.Zero) {
+			t.Errorf("\n"+
+				"name     : %s\n"+
+				"expected : %f\n"+
+				"get      : %s",
+				s.name, s.expected, transitTime.String())
 		}
 	}
 }
 
-func Test_sin(t *testing.T) {
-	scenarios := map[float64]float64{
-		0:  0,
-		30: 0.5,
-		45: 1.0 / math.Sqrt(2),
-		60: math.Sqrt(3) / 2,
-		90: 1,
-	}
+func Test_getHourAngle(t *testing.T) {
+	latitude := float64(-6.166667)
+	sunDeclination := decimal.NewFromFloat(23.16099835)
 
-	for degree, expected := range scenarios {
-		result := sin(degree)
+	scenarios := []struct {
+		name     string
+		sunAlt   float64
+		expected float64
+	}{{
+		name:     "Jakarta, Fajr",
+		sunAlt:   -20,
+		expected: 109.1441394,
+	}, {
+		name:     "Jakarta, Sunrise",
+		sunAlt:   -1.07869939,
+		expected: 88.53151863,
+	}, {
+		name:     "Jakarta, Asr",
+		sunAlt:   32.63075274,
+		expected: 50.496359,
+	}, {
+		name:     "Jakarta, Isha",
+		sunAlt:   -18,
+		expected: 106.9681811,
+	}}
 
-		result = round(result, 3)
-		expected = round(expected, 3)
+	for _, s := range scenarios {
+		sunAlt := decimal.NewFromFloat(s.sunAlt)
+		hourAngle := getHourAngle(latitude, sunAlt, sunDeclination)
+		diff := hourAngle.Sub(decimal.NewFromFloat(s.expected))
 
-		if result-expected != 0 {
-			t.Errorf("%f degree expected %f get %f", degree, expected, result)
-		}
-	}
-}
-
-func Test_cos(t *testing.T) {
-	scenarios := map[float64]float64{
-		0:  1,
-		30: math.Sqrt(3) / 2,
-		45: 1.0 / math.Sqrt(2),
-		60: 0.5,
-		90: 0,
-	}
-
-	for degree, expected := range scenarios {
-		result := cos(degree)
-
-		result = round(result, 3)
-		expected = round(expected, 3)
-
-		if result-expected != 0 {
-			t.Errorf("%f degree expected %f get %f", degree, expected, result)
-		}
-	}
-}
-
-func Test_tan(t *testing.T) {
-	scenarios := map[float64]float64{
-		0:  0,
-		30: 1.0 / math.Sqrt(3),
-		45: 1,
-		60: math.Sqrt(3),
-	}
-
-	for degree, expected := range scenarios {
-		result := tan(degree)
-
-		result = round(result, 3)
-		expected = round(expected, 3)
-
-		if result-expected != 0 {
-			t.Errorf("%f degree expected %f get %f", degree, expected, result)
-		}
-	}
-}
-
-func Test_acos(t *testing.T) {
-	scenarios := map[float64]float64{
-		1:                  0,
-		math.Sqrt(3) / 2:   30,
-		1.0 / math.Sqrt(2): 45,
-		0.5:                60,
-		0:                  90,
-	}
-
-	for src, expected := range scenarios {
-		degree := acos(src)
-
-		degree = round(degree, 3)
-		expected = round(expected, 3)
-
-		if degree-expected != 0 {
-			t.Errorf("%f expected %f get %f", src, expected, degree)
-		}
-	}
-}
-
-func Test_round(t *testing.T) {
-	scenarios := map[float64]float64{
-		1.0 / 3.0: 0.333,
-		1.0 / 4.0: 0.25,
-		1.0 / 6.0: 0.167,
-		1.0 / 7.0: 0.143,
-		1.0 / 8.0: 0.125,
-		1.0 / 9.0: 0.111,
-	}
-
-	for src, expected := range scenarios {
-		result := round(src, 3)
-
-		if result-expected != 0 {
-			t.Errorf("Expected %f get %f", expected, result)
+		if !diff.Round(3).Equal(decimal.Zero) {
+			t.Errorf("\n"+
+				"name     : %s\n"+
+				"expected : %f\n"+
+				"get      : %s",
+				s.name, s.expected, hourAngle.String())
 		}
 	}
 }

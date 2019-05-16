@@ -3,10 +3,9 @@ package prayer
 import (
 	"math"
 	"time"
-)
 
-// Type is the type of prayer, i.e Fajr, Zuhr, Asr, Maghrib and Isha.
-type Type int
+	"github.com/shopspring/decimal"
+)
 
 // CalculationMethod is the conventions for calculating prayer times, especially Fajr and Isha.
 // For details, check http://praytimes.org/wiki/Calculation_Methods.
@@ -15,27 +14,6 @@ type CalculationMethod int
 // AsrCalculationMethod is the conventions for calculating Asr time.
 // For details, check http://www.prayerminder.com/faq.php#Fiqh.
 type AsrCalculationMethod int
-
-// TimeCorrections is the correction time for each prayer.
-type TimeCorrections map[Type]time.Duration
-
-// Times is the time for adhan or iqama.
-type Times map[Type]time.Time
-
-const (
-	// Fajr is prayer that done at dawn to sunrise.
-	Fajr Type = iota
-	// Sunrise is sunrise. It's only included as prayer type to simplify code.
-	Sunrise
-	// Zuhr is prayer that done after true noon until Asr.
-	Zuhr
-	// Asr is prayer that done in afternoon, when the sun started to go down.
-	Asr
-	// Maghrib is prayer that done after sun until dusk.
-	Maghrib
-	// Isha is prayer that done at dusk and until dawn.
-	Isha
-)
 
 const (
 	// Default is the default calculation method, with Fajr at 20° and Isha at 18°.
@@ -65,121 +43,234 @@ const (
 	Shafii
 )
 
-// Calculator is object for calculating prayer times.
-type Calculator struct {
+// TimeCorrections is an additional object that used to define
+// manual correction for each prayer times.
+type TimeCorrections struct {
+	Fajr    time.Duration
+	Sunrise time.Duration
+	Zuhr    time.Duration
+	Asr     time.Duration
+	Maghrib time.Duration
+	Isha    time.Duration
+}
+
+// IqamahDuration is an additional object that used to define
+// duration between adhan and iqamah.
+type IqamahDuration struct {
+	Fajr    time.Duration
+	Zuhr    time.Duration
+	Asr     time.Duration
+	Maghrib time.Duration
+	Isha    time.Duration
+}
+
+// Times is time for adhan and iqamah of each prayer.
+type Times struct {
+	Fajr    time.Time
+	Sunrise time.Time
+	Zuhr    time.Time
+	Asr     time.Time
+	Maghrib time.Time
+	Isha    time.Time
+
+	IqamahFajr    time.Time
+	IqamahZuhr    time.Time
+	IqamahAsr     time.Time
+	IqamahMaghrib time.Time
+	IqamahIsha    time.Time
+}
+
+// Config is the configuration that used for calculating prayer times.
+type Config struct {
 	Latitude             float64
 	Longitude            float64
-	CalculationMethod    CalculationMethod
-	AsrCalculationMethod AsrCalculationMethod
-	AdhanCorrections     TimeCorrections
-	TimesToIqama         TimeCorrections
+	Elevation            float64
 	FajrAngle            float64
 	IshaAngle            float64
-
-	sunDeclination float64
-	equationOfTime float64
-	transitTime    float64
+	CalculationMethod    CalculationMethod
+	AsrCalculationMethod AsrCalculationMethod
+	Corrections          TimeCorrections
+	IqamahDuration       IqamahDuration
+	PreciseToSeconds     bool
 }
 
 // Calculate calculates the times of prayers on the submitted date.
-func (calc *Calculator) Calculate(date time.Time) (Times, Times) {
-	// Normalize date
-	date = time.Date(date.Year(), date.Month(), date.Day(), 12, 0, 0, 0, date.Location())
+func Calculate(date time.Time, cfg Config) Times {
+	// Make sure date is at 12 local time
+	date = time.Date(
+		date.Year(),
+		date.Month(),
+		date.Day(),
+		12, 0, 0, 0,
+		date.Location())
 
-	// Get timezone
-	_, offset := date.Zone()
-	timezone := offset / 3600
+	// Calculate variables
+	jd := getJulianDay(date)
+	timezone := getTimezone(date)
 
-	// Prepare variables
-	var fajrAngle, ishaAngle, asrCoefficient float64
+	eoT := getEquationOfTime(jd)
+	sunDeclination := getSunDeclination(jd)
+	transitTime := getTransitTime(timezone, cfg.Longitude, eoT)
 
-	julianDay := getJulianDay(date)
-	calc.sunDeclination = getSunDeclination(julianDay)
-	calc.equationOfTime = getEquationOfTime(julianDay)
-	calc.transitTime = 12.0 + float64(timezone) - calc.Longitude/15 - calc.equationOfTime/60
+	// Calculate adhan times
+	fajr := getFajrTime(date, transitTime, sunDeclination, cfg)
+	sunrise := getSunriseTime(date, transitTime, sunDeclination, cfg)
+	zuhr := getZuhrTime(date, transitTime, cfg)
+	asr := getAsrTime(date, transitTime, sunDeclination, cfg)
+	maghrib := getMaghribTime(date, transitTime, sunDeclination, cfg)
+	isha := getIshaTime(date, transitTime, sunDeclination, cfg)
 
-	// Calculate fajr and isha angle
-	switch calc.CalculationMethod {
-	case MWL:
-		fajrAngle = 18.0
-		ishaAngle = 17.0
-	case ISNA:
-		fajrAngle = 15.0
-		ishaAngle = 15.0
-	case Egypt:
-		fajrAngle = 19.5
-		ishaAngle = 17.5
-	case Karachi:
-		fajrAngle = 18.0
-		ishaAngle = 18.0
-	default:
-		fajrAngle = 20.0
-		ishaAngle = 18.0
+	// Merge the correction time
+	fajr = fajr.Add(cfg.Corrections.Fajr)
+	sunrise = sunrise.Add(cfg.Corrections.Sunrise)
+	zuhr = zuhr.Add(cfg.Corrections.Zuhr)
+	asr = asr.Add(cfg.Corrections.Asr)
+	maghrib = maghrib.Add(cfg.Corrections.Maghrib)
+	isha = isha.Add(cfg.Corrections.Isha)
+
+	// Calculate iqamah time
+	iqamahFajr := fajr.Add(cfg.IqamahDuration.Fajr)
+	iqamahZuhr := zuhr.Add(cfg.IqamahDuration.Zuhr)
+	iqamahAsr := asr.Add(cfg.IqamahDuration.Asr)
+	iqamahMaghrib := maghrib.Add(cfg.IqamahDuration.Maghrib)
+	iqamahIsha := isha.Add(cfg.IqamahDuration.Isha)
+
+	return Times{
+		Fajr:    fajr,
+		Sunrise: sunrise,
+		Zuhr:    zuhr,
+		Asr:     asr,
+		Maghrib: maghrib,
+		Isha:    isha,
+
+		IqamahFajr:    iqamahFajr,
+		IqamahZuhr:    iqamahZuhr,
+		IqamahAsr:     iqamahAsr,
+		IqamahMaghrib: iqamahMaghrib,
+		IqamahIsha:    iqamahIsha,
 	}
-
-	// If fajr and isha angle specified, use that
-	if calc.FajrAngle != 0 {
-		fajrAngle = calc.FajrAngle
-	}
-
-	if calc.IshaAngle != 0 {
-		ishaAngle = calc.IshaAngle
-	}
-
-	// Calculate asr coefficient
-	switch calc.AsrCalculationMethod {
-	case Hanafi:
-		asrCoefficient = 2.0
-	default:
-		asrCoefficient = 1.0
-	}
-
-	// Calculate sun altitude
-	altitudes := map[Type]float64{
-		Fajr:    -fajrAngle,
-		Sunrise: -(5.0 / 6.0),
-		Zuhr:    0,
-		Asr:     arccot(asrCoefficient + tan(math.Abs(calc.sunDeclination-calc.Latitude))),
-		Maghrib: -(5.0 / 6.0),
-		Isha:    -ishaAngle,
-	}
-
-	// Calculate adhan and iqama
-	adhanTimes := make(Times)
-	iqamaTimes := make(Times)
-	for prayer, altitude := range altitudes {
-		adhan := calc.getAdhanTime(date, altitude, prayer)
-		iqama := adhan.Add(calc.TimesToIqama[prayer])
-
-		adhanTimes[prayer] = adhan
-		if prayer != Sunrise {
-			iqamaTimes[prayer] = iqama
-		}
-	}
-
-	return adhanTimes, iqamaTimes
 }
 
-func (calc Calculator) getAdhanTime(date time.Time, altitude float64, prayer Type) time.Time {
-	// Calculate hour angle
-	hourAngle := 0.0
-	if prayer != Zuhr {
-		hourAngle = acos(
-			(sin(altitude) - sin(calc.Latitude)*sin(calc.sunDeclination)) /
-				(cos(calc.Latitude) * cos(calc.sunDeclination)))
-
-		if prayer == Fajr || prayer == Sunrise {
-			hourAngle *= -1
-		}
+func getFajrAngle(cfg Config) float64 {
+	if cfg.FajrAngle != 0 {
+		return cfg.FajrAngle
 	}
 
-	// Calculate adhan time
-	minutes := math.Floor((calc.transitTime+hourAngle/15.0)*60 + 0.5)
-	year := date.Year()
-	month := date.Month()
-	day := date.Day()
-	location := date.Location()
+	switch cfg.CalculationMethod {
+	case MWL:
+		return 18.0
+	case ISNA:
+		return 15.0
+	case Egypt:
+		return 19.5
+	case Karachi:
+		return 18.0
+	default:
+		return 20.0
+	}
+}
 
-	return time.Date(year, month, day, 0, int(minutes), 0, 0, location).
-		Add(calc.AdhanCorrections[prayer])
+func getIshaAngle(cfg Config) float64 {
+	if cfg.IshaAngle != 0 {
+		return cfg.IshaAngle
+	}
+
+	switch cfg.CalculationMethod {
+	case MWL:
+		return 17.0
+	case ISNA:
+		return 15.0
+	case Egypt:
+		return 17.5
+	case Karachi:
+		return 18.0
+	default:
+		return 18.0
+	}
+}
+
+func getAsrCoefficient(cfg Config) float64 {
+	switch cfg.AsrCalculationMethod {
+	case Hanafi:
+		return 2.0
+	default:
+		return 1.0
+	}
+}
+
+func getFajrTime(date time.Time, transitTime, sunDecli decimal.Decimal, cfg Config) time.Time {
+	fajrAngle := getFajrAngle(cfg)
+	sunAltitude := decimal.NewFromFloat(-fajrAngle)
+
+	hourAngle := getHourAngle(cfg.Latitude, sunAltitude, sunDecli)
+	hours := transitTime.Sub(hourAngle.Div(decimal.New(15, 0)))
+
+	return attachHours(hours, date, cfg)
+}
+
+func getSunriseTime(date time.Time, transitTime, sunDecli decimal.Decimal, cfg Config) time.Time {
+	A := decimal.New(-5, 0).Div(decimal.New(6, 0))
+	B := decimal.NewFromFloat(0.0347).Mul(decimal.NewFromFloat(math.Sqrt(cfg.Elevation)))
+	sunAltitude := A.Sub(B)
+
+	hourAngle := getHourAngle(cfg.Latitude, sunAltitude, sunDecli)
+	hours := transitTime.Sub(hourAngle.Div(decimal.New(15, 0)))
+
+	return attachHours(hours, date, cfg)
+}
+
+func getZuhrTime(date time.Time, transitTime decimal.Decimal, cfg Config) time.Time {
+	twoMinutes := decimal.New(2, 0).Div(decimal.New(60, 0))
+	hours := transitTime.Add(twoMinutes)
+
+	return attachHours(hours, date, cfg)
+}
+
+func getAsrTime(date time.Time, transitTime, sunDecli decimal.Decimal, cfg Config) time.Time {
+	latitude := decimal.NewFromFloat(cfg.Latitude)
+	asrCoefficient := decimal.NewFromFloat(getAsrCoefficient(cfg))
+	sunAltitude := acot(asrCoefficient.Add(tan(sunDecli.Sub(latitude).Abs())))
+
+	hourAngle := getHourAngle(cfg.Latitude, sunAltitude, sunDecli)
+	hours := transitTime.Add(hourAngle.Div(decimal.New(15, 0)))
+
+	return attachHours(hours, date, cfg)
+}
+
+func getMaghribTime(date time.Time, transitTime, sunDecli decimal.Decimal, cfg Config) time.Time {
+	A := decimal.New(-5, 0).Div(decimal.New(6, 0))
+	B := decimal.NewFromFloat(0.0347).Mul(decimal.NewFromFloat(math.Sqrt(cfg.Elevation)))
+	sunAltitude := A.Sub(B)
+
+	hourAngle := getHourAngle(cfg.Latitude, sunAltitude, sunDecli)
+	hours := transitTime.Add(hourAngle.Div(decimal.New(15, 0)))
+
+	return attachHours(hours, date, cfg)
+}
+
+func getIshaTime(date time.Time, transitTime, sunDecli decimal.Decimal, cfg Config) time.Time {
+	ishaAngle := getIshaAngle(cfg)
+	sunAltitude := decimal.NewFromFloat(-ishaAngle)
+
+	hourAngle := getHourAngle(cfg.Latitude, sunAltitude, sunDecli)
+	hours := transitTime.Add(hourAngle.Div(decimal.New(15, 0)))
+
+	return attachHours(hours, date, cfg)
+}
+
+func attachHours(hours decimal.Decimal, date time.Time, cfg Config) time.Time {
+	var minutes, seconds int
+
+	if cfg.PreciseToSeconds {
+		seconds = int(hours.Mul(decimal.New(3600, 0)).Ceil().IntPart())
+	} else {
+		minutes = int(hours.Mul(decimal.New(60, 0)).Ceil().IntPart())
+	}
+
+	return time.Date(
+		date.Year(),
+		date.Month(),
+		date.Day(),
+		0, minutes, seconds, 0,
+		date.Location())
 }
