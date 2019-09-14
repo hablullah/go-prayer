@@ -1,4 +1,4 @@
-package prayer
+package trigonometry
 
 import (
 	"math"
@@ -11,29 +11,34 @@ var (
 	dec180 = decimal.New(180, 0)
 )
 
-func sin(d decimal.Decimal) decimal.Decimal {
+// Sin calculate sin value from the specified degree.
+func Sin(d decimal.Decimal) decimal.Decimal {
 	rad, _ := d.Mul(decPi).Div(dec180).Float64()
 	return decimal.NewFromFloat(math.Sin(rad))
 }
 
-func cos(d decimal.Decimal) decimal.Decimal {
+// Cos calculate cos value from the specified degree.
+func Cos(d decimal.Decimal) decimal.Decimal {
 	rad, _ := d.Mul(decPi).Div(dec180).Float64()
 	return decimal.NewFromFloat(math.Cos(rad))
 }
 
-func tan(d decimal.Decimal) decimal.Decimal {
+// Tan calculate tan value from the specified degree.
+func Tan(d decimal.Decimal) decimal.Decimal {
 	rad, _ := d.Mul(decPi).Div(dec180).Float64()
 	return decimal.NewFromFloat(math.Tan(rad))
 }
 
-func acos(cosValue decimal.Decimal) decimal.Decimal {
+// Acos calculate degree from specified cos value.
+func Acos(cosValue decimal.Decimal) decimal.Decimal {
 	fl, _ := cosValue.Float64()
 	return decimal.NewFromFloat(math.Acos(fl)).
 		Mul(dec180).
 		Div(decPi)
 }
 
-func acot(cotValue decimal.Decimal) decimal.Decimal {
+// Acot calculate degree from specified cotangent value.
+func Acot(cotValue decimal.Decimal) decimal.Decimal {
 	fl, _ := cotValue.Float64()
 	return decPi.Div(decimal.New(2, 0)).
 		Sub(decimal.NewFromFloat(math.Atan(fl))).

@@ -1,4 +1,4 @@
-package prayer
+package trigonometry
 
 import (
 	"testing"
@@ -38,7 +38,7 @@ func Test_sin(t *testing.T) {
 	}
 
 	for degree, expected := range scenarios {
-		res := sin(decimal.New(degree, 0))
+		res := Sin(decimal.New(degree, 0))
 		diff := res.Sub(decimal.NewFromFloat(expected))
 
 		if !diff.Round(3).Equal(decimal.Zero) {
@@ -83,7 +83,7 @@ func Test_cos(t *testing.T) {
 	}
 
 	for degree, expected := range scenarios {
-		res := cos(decimal.New(degree, 0))
+		res := Cos(decimal.New(degree, 0))
 		diff := res.Sub(decimal.NewFromFloat(expected))
 
 		if !diff.Round(3).Equal(decimal.Zero) {
@@ -126,7 +126,7 @@ func Test_tan(t *testing.T) {
 	}
 
 	for degree, expected := range scenarios {
-		res := tan(decimal.New(degree, 0))
+		res := Tan(decimal.New(degree, 0))
 		diff := res.Sub(decimal.NewFromFloat(expected))
 
 		if !diff.Round(3).Equal(decimal.Zero) {
@@ -157,7 +157,7 @@ func Test_acos(t *testing.T) {
 	}
 
 	for cosValue, expected := range scenarios {
-		res := acos(decimal.NewFromFloat(cosValue))
+		res := Acos(decimal.NewFromFloat(cosValue))
 		diff := res.Sub(decimal.NewFromFloat(expected))
 
 		if !diff.Round(3).Equal(decimal.Zero) {
@@ -185,7 +185,7 @@ func Test_acot(t *testing.T) {
 	}
 
 	for cotValue, expected := range scenarios {
-		res := acot(decimal.NewFromFloat(cotValue))
+		res := Acot(decimal.NewFromFloat(cotValue))
 		diff := res.Sub(decimal.NewFromFloat(expected))
 
 		if !diff.Round(3).Equal(decimal.Zero) {
