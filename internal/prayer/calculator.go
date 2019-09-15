@@ -79,9 +79,7 @@ func (tc TimeCalculator) GetSunriseTime() time.Time {
 
 // GetZuhrTime returns time of Zuhr.
 func (tc TimeCalculator) GetZuhrTime() time.Time {
-	twoMinutes := decimal.New(2, 0).Div(decimal.New(60, 0))
-	hours := tc.transitTime.Add(twoMinutes)
-	return tc.hoursToTime(hours)
+	return tc.hoursToTime(tc.transitTime)
 }
 
 // GetAsrTime returns time of Asr.
@@ -205,18 +203,22 @@ func (tc TimeCalculator) getSunDeclination(jd decimal.Decimal) decimal.Decimal {
 }
 
 func (tc TimeCalculator) hoursToTime(hours decimal.Decimal) time.Time {
-	var minutes, seconds int
-
-	if tc.PreciseToSeconds {
-		seconds = int(hours.Mul(decimal.New(3600, 0)).Ceil().IntPart())
-	} else {
-		minutes = int(hours.Mul(decimal.New(60, 0)).Ceil().IntPart())
-	}
-
-	return time.Date(
+	seconds := int(hours.Mul(decimal.New(3600, 0)).Ceil().IntPart())
+	newTime := time.Date(
 		tc.date.Year(),
 		tc.date.Month(),
 		tc.date.Day(),
-		0, minutes, seconds, 0,
+		0, 0, seconds, 0,
 		tc.date.Location())
+
+	if !tc.PreciseToSeconds {
+		if newTime.Second() > 10 {
+			newTime = newTime.Add(time.Minute)
+		}
+
+		second := time.Duration(newTime.Second()) * time.Second
+		newTime = newTime.Add(-second)
+	}
+
+	return newTime
 }
