@@ -20,6 +20,7 @@ type TimeCalculator struct {
 	PreciseToSeconds bool
 
 	date           time.Time
+	timezone       decimal.Decimal
 	transitTime    decimal.Decimal
 	sunDeclination decimal.Decimal
 }
@@ -39,15 +40,11 @@ func (tc *TimeCalculator) SetDate(date time.Time) {
 
 	// Calculate timezone
 	_, utcOffset := tc.date.Zone()
-	timezone := decimal.New(int64(utcOffset), 0).
+	tc.timezone = decimal.New(int64(utcOffset), 0).
 		Div(decimal.New(3600, 0))
 
 	// Calculate transit time
-	eoT := tc.getEquationOfTime(jd)
-	tc.transitTime = decimal.New(12, 0).
-		Add(timezone).
-		Sub(tc.Longitude.Div(decimal.New(15, 0))).
-		Sub(eoT.Div(decimal.New(60, 0)))
+	tc.transitTime = tc.getTransitTime(jd)
 
 	// Calculate sun declination
 	tc.sunDeclination = tc.getSunDeclination(jd)
@@ -55,26 +52,62 @@ func (tc *TimeCalculator) SetDate(date time.Time) {
 
 // GetFajrTime returns time of Fajr.
 func (tc TimeCalculator) GetFajrTime() time.Time {
+	var fajrTime time.Time
 	sunAltitude := tc.FajrAngle.Neg()
-	hourAngle := tc.getHourAngle(sunAltitude)
-	hourAngle = hourAngle.Div(decimal.New(15, 0))
+	sunDeclination := tc.sunDeclination
+	transitTime := tc.transitTime
 
-	hours := tc.transitTime.Sub(hourAngle)
-	return tc.hoursToTime(hours)
+	for i := 0; i < 5; i++ {
+		hourAngle := tc.getHourAngle(sunAltitude, sunDeclination)
+		hourAngle = hourAngle.Div(decimal.New(15, 0))
+		hours := transitTime.Sub(hourAngle)
+
+		prevFajrTime := fajrTime
+		fajrTime = tc.hoursToTime(hours)
+		diff := prevFajrTime.Sub(fajrTime).Seconds()
+		if math.Round(diff) == 0 {
+			break
+		}
+
+		jd := getJulianDay(fajrTime)
+		sunDeclination = tc.getSunDeclination(jd)
+		transitTime = tc.getTransitTime(jd)
+	}
+
+	return fajrTime
 }
 
 // GetSunriseTime returns time of sunrise.
 func (tc TimeCalculator) GetSunriseTime() time.Time {
+	// Calculate sun altitude
 	sqrtElevation := decimal.NewFromFloat(math.Sqrt(tc.Elevation))
 	A := decimal.New(-5, 0).Div(decimal.New(6, 0)) // -0.833333
 	B := decimal.NewFromFloat(0.0347).Mul(sqrtElevation)
 	sunAltitude := A.Sub(B)
 
-	hourAngle := tc.getHourAngle(sunAltitude)
-	hourAngle = hourAngle.Div(decimal.New(15, 0))
+	// Calculate sunrise time
+	var sunriseTime time.Time
+	sunDeclination := tc.sunDeclination
+	transitTime := tc.transitTime
 
-	hours := tc.transitTime.Sub(hourAngle)
-	return tc.hoursToTime(hours)
+	for i := 0; i < 5; i++ {
+		hourAngle := tc.getHourAngle(sunAltitude, sunDeclination)
+		hourAngle = hourAngle.Div(decimal.New(15, 0))
+		hours := transitTime.Sub(hourAngle)
+
+		prevSunriseTime := sunriseTime
+		sunriseTime = tc.hoursToTime(hours)
+		diff := prevSunriseTime.Sub(sunriseTime).Seconds()
+		if math.Round(diff) == 0 {
+			break
+		}
+
+		jd := getJulianDay(sunriseTime)
+		sunDeclination = tc.getSunDeclination(jd)
+		transitTime = tc.getTransitTime(jd)
+	}
+
+	return sunriseTime
 }
 
 // GetZuhrTime returns time of Zuhr.
@@ -84,51 +117,109 @@ func (tc TimeCalculator) GetZuhrTime() time.Time {
 
 // GetAsrTime returns time of Asr.
 func (tc TimeCalculator) GetAsrTime() time.Time {
+	// Calculate sun altitude
 	A := trig.Tan(tc.sunDeclination.Sub(tc.Latitude).Abs())
 	sunAltitude := trig.Acot(tc.AsrCoefficient.Add(A))
 
-	hourAngle := tc.getHourAngle(sunAltitude)
-	hourAngle = hourAngle.Div(decimal.New(15, 0))
+	// Calculate asr time
+	var asrTime time.Time
+	sunDeclination := tc.sunDeclination
+	transitTime := tc.transitTime
 
-	hours := tc.transitTime.Add(hourAngle)
-	return tc.hoursToTime(hours)
+	for i := 0; i < 5; i++ {
+		hourAngle := tc.getHourAngle(sunAltitude, sunDeclination)
+		hourAngle = hourAngle.Div(decimal.New(15, 0))
+		hours := transitTime.Add(hourAngle)
+
+		prevAsrTime := asrTime
+		asrTime = tc.hoursToTime(hours)
+		diff := prevAsrTime.Sub(asrTime).Seconds()
+		if math.Round(diff) == 0 {
+			break
+		}
+
+		jd := getJulianDay(asrTime)
+		sunDeclination = tc.getSunDeclination(jd)
+		transitTime = tc.getTransitTime(jd)
+	}
+
+	return asrTime
 }
 
 // GetMaghribTime returns time of Maghrib.
 func (tc TimeCalculator) GetMaghribTime() time.Time {
+	// Calculate sun altitude
 	sqrtElevation := decimal.NewFromFloat(math.Sqrt(tc.Elevation))
 	A := decimal.New(-5, 0).Div(decimal.New(6, 0)) // -0.833333
 	B := decimal.NewFromFloat(0.0347).Mul(sqrtElevation)
 	sunAltitude := A.Sub(B)
 
-	hourAngle := tc.getHourAngle(sunAltitude)
-	hourAngle = hourAngle.Div(decimal.New(15, 0))
+	// Calculate maghrib time
+	var maghribTime time.Time
+	sunDeclination := tc.sunDeclination
+	transitTime := tc.transitTime
 
-	hours := tc.transitTime.Add(hourAngle)
-	return tc.hoursToTime(hours)
+	for i := 0; i < 5; i++ {
+		hourAngle := tc.getHourAngle(sunAltitude, sunDeclination)
+		hourAngle = hourAngle.Div(decimal.New(15, 0))
+		hours := transitTime.Add(hourAngle)
+
+		prevMaghribTime := maghribTime
+		maghribTime = tc.hoursToTime(hours)
+		diff := prevMaghribTime.Sub(maghribTime).Seconds()
+		if math.Round(diff) == 0 {
+			break
+		}
+
+		jd := getJulianDay(maghribTime)
+		sunDeclination = tc.getSunDeclination(jd)
+		transitTime = tc.getTransitTime(jd)
+	}
+
+	return maghribTime
 }
 
 // GetIshaTime returns time of Isha.
 func (tc TimeCalculator) GetIshaTime() time.Time {
+	// If Maghrib duration is specified (like Saudi Arabia which
+	// has fixed Maghrib duration), simply add from Maghrib time
 	if tc.MaghribDuration != 0 {
 		maghrib := tc.GetMaghribTime()
 		return maghrib.Add(tc.MaghribDuration)
 	}
 
+	// Calculate isha time
+	var ishaTime time.Time
 	sunAltitude := tc.IshaAngle.Neg()
-	hourAngle := tc.getHourAngle(sunAltitude)
-	hourAngle = hourAngle.Div(decimal.New(15, 0))
+	sunDeclination := tc.sunDeclination
+	transitTime := tc.transitTime
 
-	hours := tc.transitTime.Add(hourAngle)
-	return tc.hoursToTime(hours)
+	for i := 0; i < 5; i++ {
+		hourAngle := tc.getHourAngle(sunAltitude, sunDeclination)
+		hourAngle = hourAngle.Div(decimal.New(15, 0))
+		hours := transitTime.Add(hourAngle)
+
+		prevIshaTime := ishaTime
+		ishaTime = tc.hoursToTime(hours)
+		diff := prevIshaTime.Sub(ishaTime).Seconds()
+		if math.Round(diff) == 0 {
+			break
+		}
+
+		jd := getJulianDay(ishaTime)
+		sunDeclination = tc.getSunDeclination(jd)
+		transitTime = tc.getTransitTime(jd)
+	}
+
+	return ishaTime
 }
 
-func (tc TimeCalculator) getHourAngle(sunAltitude decimal.Decimal) decimal.Decimal {
+func (tc TimeCalculator) getHourAngle(sunAltitude, sunDeclination decimal.Decimal) decimal.Decimal {
 	sinSunAltitude := trig.Sin(sunAltitude)
 	sinLatitude := trig.Sin(tc.Latitude)
 	cosLatitude := trig.Cos(tc.Latitude)
-	sinSunDeclination := trig.Sin(tc.sunDeclination)
-	cosSunDeclination := trig.Cos(tc.sunDeclination)
+	sinSunDeclination := trig.Sin(sunDeclination)
+	cosSunDeclination := trig.Cos(sunDeclination)
 
 	cosHourAngle := sinSunAltitude.
 		Sub(sinLatitude.Mul(sinSunDeclination)).
@@ -175,6 +266,14 @@ func (tc TimeCalculator) getEquationOfTime(jd decimal.Decimal) decimal.Decimal {
 
 	return A.Sub(B).Add(C).Sub(D).Add(E).Add(F).Sub(G).
 		Div(decimal.New(1000, 0))
+}
+
+func (tc TimeCalculator) getTransitTime(jd decimal.Decimal) decimal.Decimal {
+	eoT := tc.getEquationOfTime(jd)
+	return decimal.New(12, 0).
+		Add(tc.timezone).
+		Sub(tc.Longitude.Div(decimal.New(15, 0))).
+		Sub(eoT.Div(decimal.New(60, 0)))
 }
 
 func (tc TimeCalculator) getSunDeclination(jd decimal.Decimal) decimal.Decimal {
