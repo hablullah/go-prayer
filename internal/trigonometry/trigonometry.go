@@ -32,6 +32,15 @@ func Tan(d decimal.Decimal) decimal.Decimal {
 // Acos calculate degree from specified cos value.
 func Acos(cosValue decimal.Decimal) decimal.Decimal {
 	fl, _ := cosValue.Float64()
+
+	// Prevent NaN value
+	if fl < -1 {
+		fl = -1
+	}
+	if fl > 1 {
+		fl = 1
+	}
+
 	return decimal.NewFromFloat(math.Acos(fl)).
 		Mul(dec180).
 		Div(decPi)
