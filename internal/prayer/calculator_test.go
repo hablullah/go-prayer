@@ -36,7 +36,7 @@ func TestTimeCalculator_getHourAngle(t *testing.T) {
 
 	for _, s := range scenarios {
 		sunAltitude := decimal.NewFromFloat(s.sunAlt)
-		hourAngle := calc.getHourAngle(sunAltitude)
+		hourAngle := calc.getHourAngle(sunAltitude, calc.sunDeclination)
 		diff := hourAngle.Sub(decimal.NewFromFloat(s.expected))
 
 		if !diff.Round(3).Equal(decimal.Zero) {
