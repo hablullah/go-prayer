@@ -1,4 +1,4 @@
-package prayer
+package julianday
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-func Test_getJulianDay(t *testing.T) {
+func Test_Convert(t *testing.T) {
 	jkt := time.FixedZone("WIB", 7*60*60)
 	scenarios := map[time.Time]float64{
 		time.Date(-4712, 1, 1, 12, 0, 0, 0, time.UTC):  0,
@@ -23,7 +23,7 @@ func Test_getJulianDay(t *testing.T) {
 	}
 
 	for date, expected := range scenarios {
-		jd := getJulianDay(date)
+		jd := Convert(date)
 		diff := jd.Sub(decimal.NewFromFloat(expected))
 
 		if !diff.Round(3).Equal(decimal.Zero) {

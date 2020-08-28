@@ -1,11 +1,5 @@
 package prayer
 
-import (
-	"time"
-
-	"github.com/shopspring/decimal"
-)
-
 // CalculationMethod is the conventions for calculating prayer times, especially Fajr and Isha.
 // For references, check these website :
 // - http://praytimes.org/wiki/Calculation_Methods
@@ -13,9 +7,9 @@ import (
 // - https://www.muslimpro.com/en/prayer-times
 type CalculationMethod int
 
-// AsrJuristicMethod is the conventions for calculating Asr time.
+// AsrConvention is the conventions for calculating Asr time.
 // For details, check http://www.prayerminder.com/faq.php#Fiqh.
-type AsrJuristicMethod int
+type AsrConvention int
 
 const (
 	// Default is the default calculation method with the same value as MWL.
@@ -93,64 +87,13 @@ const (
 )
 
 const (
-	// Hanafi is the school which said that the Asr time is when the shadow of
-	// an object is twice the length of the object plus the length of its shadow
-	// when the sun is at its zenith.
-	Hanafi AsrJuristicMethod = iota
-
 	// Shafii is the school which said that the Asr time is when the shadow of
 	// an object is equals the length of the object plus the length of its shadow
 	// when the sun is at its zenith.
-	Shafii
+	Shafii AsrConvention = iota
+
+	// Hanafi is the school which said that the Asr time is when the shadow of
+	// an object is twice the length of the object plus the length of its shadow
+	// when the sun is at its zenith.
+	Hanafi
 )
-
-func getCalculationAngle(cfg Config) (decimal.Decimal, decimal.Decimal, time.Duration) {
-	var maghribDuration time.Duration
-	var fajrAngle, ishaAngle float64
-
-	switch cfg.CalculationMethod {
-	case MWL, Algerian, Diyanet:
-		fajrAngle, ishaAngle = 18, 17
-	case ISNA:
-		fajrAngle, ishaAngle = 15, 15
-	case UmmAlQura:
-		fajrAngle, maghribDuration = 18.5, 90*time.Minute
-	case Gulf:
-		fajrAngle, maghribDuration = 19.5, 90*time.Minute
-	case Karachi, France18, Tunisia:
-		fajrAngle, ishaAngle = 18, 18
-	case Egypt:
-		fajrAngle, ishaAngle = 19.5, 17.5
-	case EgyptBis, Kemenag, MUIS, JAKIM:
-		fajrAngle, ishaAngle = 20, 18
-	case UOIF:
-		fajrAngle, ishaAngle = 12, 12
-	case France15:
-		fajrAngle, ishaAngle = 15, 15
-	case Tehran:
-		fajrAngle, ishaAngle = 17.7, 14
-	case Jafari:
-		fajrAngle, ishaAngle = 16, 14
-	}
-
-	if cfg.FajrAngle != 0 {
-		fajrAngle = cfg.FajrAngle
-	}
-
-	if cfg.IshaAngle != 0 {
-		ishaAngle = cfg.IshaAngle
-	}
-
-	return decimal.NewFromFloat(fajrAngle),
-		decimal.NewFromFloat(ishaAngle),
-		maghribDuration
-}
-
-func getAsrCoefficient(cfg Config) decimal.Decimal {
-	switch cfg.AsrJuristicMethod {
-	case Hanafi:
-		return decimal.New(2, 0)
-	default:
-		return decimal.New(1, 0)
-	}
-}

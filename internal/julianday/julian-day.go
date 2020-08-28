@@ -1,4 +1,4 @@
-package prayer
+package julianday
 
 import (
 	"time"
@@ -6,7 +6,8 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-func getJulianDay(date time.Time) decimal.Decimal {
+// Convert converts a date to Julian Day
+func Convert(date time.Time) decimal.Decimal {
 	// Convert to UTC
 	date = date.UTC()
 

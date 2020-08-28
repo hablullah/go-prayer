@@ -8,32 +8,31 @@ import (
 )
 
 func main() {
-	cfg := prayer.Config{
+	location := time.FixedZone("WIB", 7*3600)
+	date := time.Date(2009, 6, 12, 0, 0, 0, 0, location)
+
+	calc := prayer.Calculator{
 		Latitude:          -6.21,
 		Longitude:         106.85,
 		Elevation:         50,
 		CalculationMethod: prayer.Kemenag,
-		AsrJuristicMethod: prayer.Shafii,
+		AsrConvention:     prayer.Shafii,
 		PreciseToSeconds:  false,
-		Corrections: prayer.TimeCorrections{
-			Fajr:    2 * time.Minute,
-			Sunrise: -time.Minute,
-			Zuhr:    2 * time.Minute,
-			Asr:     time.Minute,
-			Maghrib: time.Minute,
-			Isha:    time.Minute,
-		},
 	}
 
-	location := time.FixedZone("WIB", 7*3600)
-	date := time.Date(2009, 6, 12, 0, 0, 0, 0, location)
-	adhan, _ := prayer.GetTimes(date, cfg)
+	calc.Init().SetDate(date)
+	fajr := calc.Calculate(prayer.Fajr)
+	sunrise := calc.Calculate(prayer.Sunrise)
+	zuhr := calc.Calculate(prayer.Zuhr)
+	asr := calc.Calculate(prayer.Asr)
+	maghrib := calc.Calculate(prayer.Maghrib)
+	isha := calc.Calculate(prayer.Isha)
 
 	fmt.Println(date.Format("2006-01-02"))
-	fmt.Println("Fajr    =", adhan.Fajr.Format("15:04"))
-	fmt.Println("Sunrise =", adhan.Sunrise.Format("15:04"))
-	fmt.Println("Zuhr    =", adhan.Zuhr.Format("15:04"))
-	fmt.Println("Asr     =", adhan.Asr.Format("15:04"))
-	fmt.Println("Maghrib =", adhan.Maghrib.Format("15:04"))
-	fmt.Println("Isha    =", adhan.Isha.Format("15:04"))
+	fmt.Println("Fajr    =", fajr.Format("15:04"))
+	fmt.Println("Sunrise =", sunrise.Format("15:04"))
+	fmt.Println("Zuhr    =", zuhr.Format("15:04"))
+	fmt.Println("Asr     =", asr.Format("15:04"))
+	fmt.Println("Maghrib =", maghrib.Format("15:04"))
+	fmt.Println("Isha    =", isha.Format("15:04"))
 }
