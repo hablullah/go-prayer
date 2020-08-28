@@ -113,7 +113,8 @@ func (calc Calculator) getSunAltitude(target Target, jd decimal.Decimal) decimal
 	case Asr:
 		sunDeclination := calc.getSunDeclination(jd)
 		A := trig.Tan(sunDeclination.Sub(calc.latitude).Abs())
-		return trig.Acot(calc.asrCoefficient.Add(A))
+		B := calc.asrCoefficient.Add(A)
+		return trig.Acot(B)
 
 	case Isha:
 		return calc.ishaAngle.Neg()

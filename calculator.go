@@ -8,6 +8,9 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+// TimeCorrection is correction for each target time
+type TimeCorrection map[Target]time.Duration
+
 // Calculator is calculator that used to calculate the prayer times.
 type Calculator struct {
 	Latitude          float64
@@ -20,6 +23,7 @@ type Calculator struct {
 	AsrConvention     AsrConvention
 	PreciseToSeconds  bool
 	IgnoreElevation   bool
+	TimeCorrection    TimeCorrection
 
 	latitude       decimal.Decimal
 	longitude      decimal.Decimal
@@ -164,6 +168,11 @@ func (calc Calculator) Calculate(target Target) time.Time {
 		if target == Asr {
 			sunAltitude = calc.getSunAltitude(target, jd)
 		}
+	}
+
+	// Add correction time
+	if correction, exist := calc.TimeCorrection[target]; exist {
+		targetTime = targetTime.Add(correction)
 	}
 
 	return targetTime
