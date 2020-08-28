@@ -11,6 +11,9 @@ import (
 // TimeCorrection is correction for each target time
 type TimeCorrection map[Target]time.Duration
 
+// AngleCorrection is value in degree, used to correct hour angle
+type AngleCorrection map[Target]float64
+
 // Calculator is calculator that used to calculate the prayer times.
 type Calculator struct {
 	Latitude          float64
@@ -24,6 +27,7 @@ type Calculator struct {
 	PreciseToSeconds  bool
 	IgnoreElevation   bool
 	TimeCorrection    TimeCorrection
+	AngleCorrection   AngleCorrection
 
 	latitude       decimal.Decimal
 	longitude      decimal.Decimal
@@ -152,6 +156,17 @@ func (calc Calculator) Calculate(target Target) time.Time {
 			hours = transitTime
 		}
 
+		// Add angle correction
+		if correction, exist := calc.AngleCorrection[target]; exist {
+			decCorrection := decimal.NewFromFloat(correction)
+			hours = hours.Add(decCorrection.Div(dec15))
+		}
+
+		// Add time correction
+		if correction, exist := calc.TimeCorrection[target]; exist {
+			hours = hours.Add(decimal.NewFromFloat(correction.Hours()))
+		}
+
 		// Compare time between current and previous iteration
 		prevTargetTime := targetTime
 		targetTime = calc.hoursToTime(hours)
@@ -168,11 +183,6 @@ func (calc Calculator) Calculate(target Target) time.Time {
 		if target == Asr {
 			sunAltitude = calc.getSunAltitude(target, jd)
 		}
-	}
-
-	// Add correction time
-	if correction, exist := calc.TimeCorrection[target]; exist {
-		targetTime = targetTime.Add(correction)
 	}
 
 	return targetTime
