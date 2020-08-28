@@ -104,7 +104,11 @@ func (calc Calculator) getSunAltitude(target Target, jd decimal.Decimal) decimal
 		sqrtElevation := decimal.NewFromFloat(math.Sqrt(calc.Elevation))
 		A := decimal.New(-5, 0).Div(decimal.New(6, 0)) // -0.833333
 		B := decimal.NewFromFloat(0.0347).Mul(sqrtElevation)
-		return A.Sub(B)
+		if calc.IgnoreElevation {
+			return A
+		} else {
+			return A.Sub(B)
+		}
 
 	case Asr:
 		sunDeclination := calc.getSunDeclination(jd)

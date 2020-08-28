@@ -19,6 +19,7 @@ type Calculator struct {
 	CalculationMethod CalculationMethod
 	AsrConvention     AsrConvention
 	PreciseToSeconds  bool
+	IgnoreElevation   bool
 
 	latitude       decimal.Decimal
 	longitude      decimal.Decimal
