@@ -119,6 +119,12 @@ func (calc *Calculator) SetDate(date time.Time) *Calculator {
 
 // Calculate calculates time for the specified target.
 func (calc Calculator) Calculate(target Target) time.Time {
+	// If target is Isha and Maghrib duration is specified, just add it
+	if target == Isha && calc.MaghribDuration != 0 {
+		return calc.Calculate(Maghrib).
+			Add(calc.MaghribDuration)
+	}
+
 	// Prepare necessary variables
 	var targetTime time.Time
 	jd := julianday.Convert(calc.date)
