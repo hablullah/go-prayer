@@ -8,7 +8,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-func (calc Calculator) getHourAngle(sunAltitude, sunDeclination decimal.Decimal) decimal.Decimal {
+func (calc Calculator) getHourAngle(sunAltitude, sunDeclination decimal.Decimal) (hourAngle decimal.Decimal, isNA bool) {
 	sinSunAltitude := trig.Sin(sunAltitude)
 	sinLatitude := trig.Sin(calc.latitude)
 	cosLatitude := trig.Cos(calc.latitude)
@@ -19,7 +19,17 @@ func (calc Calculator) getHourAngle(sunAltitude, sunDeclination decimal.Decimal)
 		Sub(sinLatitude.Mul(sinSunDeclination)).
 		Div(cosLatitude.Mul(cosSunDeclination))
 
-	return trig.Acos(cosHourAngle)
+	decNeg1 := decimal.New(-1, 0)
+	decPos1 := decimal.New(1, 0)
+	if cosHourAngle.LessThan(decNeg1) || cosHourAngle.GreaterThan(decPos1) {
+		isNA = true
+		hourAngle = decimal.Zero
+	} else {
+		isNA = false
+		hourAngle = trig.Acos(cosHourAngle)
+	}
+
+	return
 }
 
 func (calc Calculator) getEquationOfTime(jd decimal.Decimal) decimal.Decimal {

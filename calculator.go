@@ -126,11 +126,16 @@ func (calc *Calculator) SetDate(date time.Time) *Calculator {
 }
 
 // Calculate calculates time for the specified target.
-func (calc Calculator) Calculate(target Target) time.Time {
+// Returns the target time and boolean to mark whether the time is available or not.
+func (calc Calculator) Calculate(target Target) (time.Time, bool) {
 	// If target is Isha and Maghrib duration is specified, just add it
 	if target == Isha && calc.MaghribDuration != 0 {
-		return calc.Calculate(Maghrib).
-			Add(calc.MaghribDuration)
+		targetTime, isNA := calc.Calculate(Maghrib)
+		if isNA {
+			return time.Time{}, true
+		}
+
+		return targetTime.Add(calc.MaghribDuration), false
 	}
 
 	// Prepare necessary variables
@@ -144,7 +149,10 @@ func (calc Calculator) Calculate(target Target) time.Time {
 	for i := 0; i < 5; i++ {
 		// Calculate hours to reach the target
 		dec15 := decimal.New(15, 0)
-		hourAngle := calc.getHourAngle(sunAltitude, sunDeclination)
+		hourAngle, isNA := calc.getHourAngle(sunAltitude, sunDeclination)
+		if isNA {
+			return time.Time{}, true
+		}
 
 		var hours decimal.Decimal
 		switch {
@@ -185,5 +193,18 @@ func (calc Calculator) Calculate(target Target) time.Time {
 		}
 	}
 
-	return targetTime
+	return targetTime, false
+}
+
+// CalculateAll returns times for all possible targets. If the target
+// is not available, it will be omitted from result.
+func (calc Calculator) CalculateAll() map[Target]time.Time {
+	result := map[Target]time.Time{}
+	for target := Fajr; target <= Isha; target++ {
+		if targetTime, isNA := calc.Calculate(target); !isNA {
+			result[target] = targetTime
+		}
+	}
+
+	return result
 }

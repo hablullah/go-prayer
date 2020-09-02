@@ -20,19 +20,13 @@ func main() {
 		PreciseToSeconds:  false,
 	}
 
-	calc.Init().SetDate(date)
-	fajr := calc.Calculate(prayer.Fajr)
-	sunrise := calc.Calculate(prayer.Sunrise)
-	zuhr := calc.Calculate(prayer.Zuhr)
-	asr := calc.Calculate(prayer.Asr)
-	maghrib := calc.Calculate(prayer.Maghrib)
-	isha := calc.Calculate(prayer.Isha)
+	result := calc.Init().SetDate(date).CalculateAll()
 
 	fmt.Println(date.Format("2006-01-02"))
-	fmt.Println("Fajr    =", fajr.Format("15:04"))
-	fmt.Println("Sunrise =", sunrise.Format("15:04"))
-	fmt.Println("Zuhr    =", zuhr.Format("15:04"))
-	fmt.Println("Asr     =", asr.Format("15:04"))
-	fmt.Println("Maghrib =", maghrib.Format("15:04"))
-	fmt.Println("Isha    =", isha.Format("15:04"))
+	fmt.Println("Fajr    =", result[prayer.Fajr].Format("15:04"))
+	fmt.Println("Sunrise =", result[prayer.Sunrise].Format("15:04"))
+	fmt.Println("Zuhr    =", result[prayer.Zuhr].Format("15:04"))
+	fmt.Println("Asr     =", result[prayer.Asr].Format("15:04"))
+	fmt.Println("Maghrib =", result[prayer.Maghrib].Format("15:04"))
+	fmt.Println("Isha    =", result[prayer.Isha].Format("15:04"))
 }
