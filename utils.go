@@ -4,6 +4,7 @@ import (
 	"math"
 	"time"
 
+	"github.com/RadhiFadlillah/go-prayer/internal/julianday"
 	trig "github.com/RadhiFadlillah/go-prayer/internal/trigonometry"
 	"github.com/shopspring/decimal"
 )
@@ -152,4 +153,108 @@ func (calc Calculator) hoursToTime(hours decimal.Decimal) time.Time {
 	}
 
 	return newTime
+}
+
+// calculate calculates time for the specified target.
+// Returns the target time and boolean to mark whether the time is available or not.
+func (calc Calculator) calculate(target Target) (time.Time, bool) {
+	// If target is Isha and Maghrib duration is specified, just add it
+	if target == Isha && calc.MaghribDuration != 0 {
+		targetTime, isNA := calc.calculate(Maghrib)
+		if isNA {
+			return time.Time{}, true
+		}
+
+		return targetTime.Add(calc.MaghribDuration), false
+	}
+
+	// Prepare necessary variables
+	var targetTime time.Time
+	jd := julianday.Convert(calc.date)
+	transitTime := calc.transitTime
+	sunDeclination := calc.sunDeclination
+	sunAltitude := calc.getSunAltitude(target, jd)
+
+	// Max five tries
+	for i := 0; i < 5; i++ {
+		// Calculate hours to reach the target
+		dec15 := decimal.New(15, 0)
+		hourAngle, isNA := calc.getHourAngle(sunAltitude, sunDeclination)
+		if isNA {
+			return time.Time{}, true
+		}
+
+		var hours decimal.Decimal
+		switch {
+		case target > Zuhr:
+			hours = transitTime.Add(hourAngle.Div(dec15))
+		case target < Zuhr:
+			hours = transitTime.Sub(hourAngle.Div(dec15))
+		default:
+			hours = transitTime
+		}
+
+		// Add angle correction
+		if correction, exist := calc.AngleCorrection[target]; exist {
+			decCorrection := decimal.NewFromFloat(correction)
+			hours = hours.Add(decCorrection.Div(dec15))
+		}
+
+		// Add time correction
+		if correction, exist := calc.TimeCorrection[target]; exist {
+			hours = hours.Add(decimal.NewFromFloat(correction.Hours()))
+		}
+
+		// Compare time between current and previous iteration
+		prevTargetTime := targetTime
+		targetTime = calc.hoursToTime(hours)
+		diff := prevTargetTime.Sub(targetTime).Seconds()
+		if math.Round(diff) == 0 {
+			break
+		}
+
+		// Improve variables using the result in this iteration
+		jd = julianday.Convert(targetTime)
+		transitTime = calc.getTransitTime(jd)
+		sunDeclination = calc.getSunDeclination(jd)
+
+		if target == Asr {
+			sunAltitude = calc.getSunAltitude(target, jd)
+		}
+	}
+
+	return targetTime, false
+}
+
+func (calc Calculator) adjustHighLatitudeTime(sunrise, sunset time.Time) (time.Time, time.Time) {
+	// Get night portion
+	portionFajr := decimal.Zero
+	portionIsha := decimal.Zero
+	switch calc.HighLatitudeMethod {
+	case MiddleNight:
+		portionFajr = decimal.New(1, 0).Div(decimal.New(2, 0))
+		portionIsha = portionFajr
+	case OneSeventhNight:
+		portionFajr = decimal.New(1, 0).Div(decimal.New(7, 0))
+		portionIsha = portionFajr
+	default:
+		portionFajr = calc.fajrAngle.Div(decimal.New(60, 0))
+		portionIsha = calc.ishaAngle.Div(decimal.New(60, 0))
+	}
+
+	// Calculate fajr
+	lastSunset := sunset.AddDate(0, 0, -1)
+	lastNightDuration := sunrise.Sub(lastSunset).Seconds()
+	decLastNightDuration := decimal.NewFromFloat(lastNightDuration)
+	fajrDuration := portionFajr.Mul(decLastNightDuration).Round(0).IntPart()
+	fajrTime := sunrise.Add(time.Duration(-fajrDuration) * time.Second)
+
+	// Calculate isha
+	nextSunrise := sunrise.AddDate(0, 0, 1)
+	nightDuration := nextSunrise.Sub(sunset).Seconds()
+	decNightDuration := decimal.NewFromFloat(nightDuration)
+	maghribDuration := portionIsha.Mul(decNightDuration).Round(0).IntPart()
+	ishaTime := sunset.Add(time.Duration(maghribDuration) * time.Second)
+
+	return fajrTime, ishaTime
 }

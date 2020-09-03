@@ -11,6 +11,11 @@ type CalculationMethod int
 // For details, check http://www.prayerminder.com/faq.php#Fiqh.
 type AsrConvention int
 
+// HighLatitudeMethods is the methods for calculating Fajr and Isha
+// time in area with higher latitude (more than 50N or 50S).
+// For details, check http://praytimes.org/calculation.
+type HighLatitudeMethods int
+
 const (
 	// Default is the default calculation method with the same value as MWL.
 	Default CalculationMethod = iota
@@ -96,4 +101,24 @@ const (
 	// an object is twice the length of the object plus the length of its shadow
 	// when the sun is at its zenith.
 	Hanafi
+)
+
+const (
+	// AngleBased is method that used by some recent prayer time calculators. Let a
+	// be the twilight angle for Isha, and let t = a/60. The period between sunset
+	// and sunrise is divided into t parts. Isha begins after the first part. For
+	// example, if the twilight angle for Isha is 15, then Isha begins at the end
+	// of the first quarter (15/60) of the night. Time for Fajr is calculated similarly.
+	AngleBased HighLatitudeMethods = iota
+
+	// OneSevenNight is method where the period between sunset and sunrise is divided
+	// into seven parts. Isha begins after the first one-seventh part, and Fajr is at
+	// the beginning of the seventh part.
+	OneSeventhNight
+
+	// MiddleNight is method where the period from sunset to sunrise is divided into
+	// two halves. The first half is considered to be the "night" and the other half
+	// as "day break". Fajr and Isha in this method are assumed to be at mid-night
+	// during the abnormal periods.
+	MiddleNight
 )

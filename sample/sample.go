@@ -20,7 +20,7 @@ func main() {
 		PreciseToSeconds:  false,
 	}
 
-	result := calc.Init().SetDate(date).CalculateAll()
+	result := calc.Init().SetDate(date).Calculate()
 
 	fmt.Println(date.Format("2006-01-02"))
 	fmt.Println("Fajr    =", result[prayer.Fajr].Format("15:04"))

@@ -1,7 +1,6 @@
 package prayer
 
 import (
-	"math"
 	"time"
 
 	"github.com/RadhiFadlillah/go-prayer/internal/julianday"
@@ -16,18 +15,19 @@ type AngleCorrection map[Target]float64
 
 // Calculator is calculator that used to calculate the prayer times.
 type Calculator struct {
-	Latitude          float64
-	Longitude         float64
-	Elevation         float64
-	FajrAngle         float64
-	IshaAngle         float64
-	MaghribDuration   time.Duration
-	CalculationMethod CalculationMethod
-	AsrConvention     AsrConvention
-	PreciseToSeconds  bool
-	IgnoreElevation   bool
-	TimeCorrection    TimeCorrection
-	AngleCorrection   AngleCorrection
+	Latitude           float64
+	Longitude          float64
+	Elevation          float64
+	FajrAngle          float64
+	IshaAngle          float64
+	MaghribDuration    time.Duration
+	CalculationMethod  CalculationMethod
+	AsrConvention      AsrConvention
+	PreciseToSeconds   bool
+	IgnoreElevation    bool
+	TimeCorrection     TimeCorrection
+	AngleCorrection    AngleCorrection
+	HighLatitudeMethod HighLatitudeMethods
 
 	latitude       decimal.Decimal
 	longitude      decimal.Decimal
@@ -125,86 +125,27 @@ func (calc *Calculator) SetDate(date time.Time) *Calculator {
 	return calc
 }
 
-// Calculate calculates time for the specified target.
-// Returns the target time and boolean to mark whether the time is available or not.
-func (calc Calculator) Calculate(target Target) (time.Time, bool) {
-	// If target is Isha and Maghrib duration is specified, just add it
-	if target == Isha && calc.MaghribDuration != 0 {
-		targetTime, isNA := calc.Calculate(Maghrib)
-		if isNA {
-			return time.Time{}, true
-		}
-
-		return targetTime.Add(calc.MaghribDuration), false
-	}
-
-	// Prepare necessary variables
-	var targetTime time.Time
-	jd := julianday.Convert(calc.date)
-	transitTime := calc.transitTime
-	sunDeclination := calc.sunDeclination
-	sunAltitude := calc.getSunAltitude(target, jd)
-
-	// Max five tries
-	for i := 0; i < 5; i++ {
-		// Calculate hours to reach the target
-		dec15 := decimal.New(15, 0)
-		hourAngle, isNA := calc.getHourAngle(sunAltitude, sunDeclination)
-		if isNA {
-			return time.Time{}, true
-		}
-
-		var hours decimal.Decimal
-		switch {
-		case target > Zuhr:
-			hours = transitTime.Add(hourAngle.Div(dec15))
-		case target < Zuhr:
-			hours = transitTime.Sub(hourAngle.Div(dec15))
-		default:
-			hours = transitTime
-		}
-
-		// Add angle correction
-		if correction, exist := calc.AngleCorrection[target]; exist {
-			decCorrection := decimal.NewFromFloat(correction)
-			hours = hours.Add(decCorrection.Div(dec15))
-		}
-
-		// Add time correction
-		if correction, exist := calc.TimeCorrection[target]; exist {
-			hours = hours.Add(decimal.NewFromFloat(correction.Hours()))
-		}
-
-		// Compare time between current and previous iteration
-		prevTargetTime := targetTime
-		targetTime = calc.hoursToTime(hours)
-		diff := prevTargetTime.Sub(targetTime).Seconds()
-		if math.Round(diff) == 0 {
-			break
-		}
-
-		// Improve variables using the result in this iteration
-		jd = julianday.Convert(targetTime)
-		transitTime = calc.getTransitTime(jd)
-		sunDeclination = calc.getSunDeclination(jd)
-
-		if target == Asr {
-			sunAltitude = calc.getSunAltitude(target, jd)
-		}
-	}
-
-	return targetTime, false
-}
-
-// CalculateAll returns times for all possible targets. If the target
+// Calculate calculates times for all possible targets. If the target
 // is not available, it will be omitted from result.
-func (calc Calculator) CalculateAll() map[Target]time.Time {
-	result := map[Target]time.Time{}
+func (calc Calculator) Calculate() map[Target]time.Time {
+	times := map[Target]time.Time{}
+
+	// Get all target's time
 	for target := Fajr; target <= Isha; target++ {
-		if targetTime, isNA := calc.Calculate(target); !isNA {
-			result[target] = targetTime
+		if targetTime, isNA := calc.calculate(target); !isNA {
+			times[target] = targetTime
 		}
 	}
 
-	return result
+	// If Fajr or Isha is not calculable
+	// but Sunrise and Sunset is, use high latitude rules
+	_, hasFajr := times[Fajr]
+	_, hasIsha := times[Isha]
+	sunrise, hasSunrise := times[Sunrise]
+	sunset, hasSunset := times[Maghrib]
+	if (!hasFajr || !hasIsha) && (hasSunrise && hasSunset) {
+		times[Fajr], times[Isha] = calc.adjustHighLatitudeTime(sunrise, sunset)
+	}
+
+	return times
 }
