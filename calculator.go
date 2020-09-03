@@ -24,7 +24,6 @@ type Calculator struct {
 	CalculationMethod  CalculationMethod
 	AsrConvention      AsrConvention
 	PreciseToSeconds   bool
-	IgnoreElevation    bool
 	TimeCorrection     TimeCorrection
 	AngleCorrection    AngleCorrection
 	HighLatitudeMethod HighLatitudeMethods
