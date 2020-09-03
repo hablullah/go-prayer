@@ -20,34 +20,35 @@ import (
 )
 
 func main() {
-	cfg := prayer.Config{
+	location := time.FixedZone("WIB", 7*3600)
+	date := time.Date(2009, 6, 12, 0, 0, 0, 0, location)
+
+	calc := prayer.Calculator{
 		Latitude:          -6.21,
 		Longitude:         106.85,
 		Elevation:         50,
 		CalculationMethod: prayer.Kemenag,
-		AsrJuristicMethod: prayer.Shafii,
+		AsrConvention:     prayer.Shafii,
 		PreciseToSeconds:  false,
-		Corrections: prayer.TimeCorrections{
-			Fajr:    2 * time.Minute,
-			Sunrise: -time.Minute,
-			Zuhr:    2 * time.Minute,
-			Asr:     time.Minute,
-			Maghrib: time.Minute,
-			Isha:    time.Minute,
+		TimeCorrection: prayer.TimeCorrection{
+			prayer.Fajr:    2 * time.Minute,
+			prayer.Sunrise: -time.Minute,
+			prayer.Zuhr:    2 * time.Minute,
+			prayer.Asr:     time.Minute,
+			prayer.Maghrib: time.Minute,
+			prayer.Isha:    time.Minute,
 		},
 	}
 
-	location := time.FixedZone("WIB", 7*3600)
-	date := time.Date(2009, 6, 12, 0, 0, 0, 0, location)
-	adhan, _ := prayer.GetTimes(date, cfg)
+	result := calc.Init().SetDate(date).Calculate()
 
 	fmt.Println(date.Format("2006-01-02"))
-	fmt.Println("Fajr    =", adhan.Fajr.Format("15:04"))
-	fmt.Println("Sunrise =", adhan.Sunrise.Format("15:04"))
-	fmt.Println("Zuhr    =", adhan.Zuhr.Format("15:04"))
-	fmt.Println("Asr     =", adhan.Asr.Format("15:04"))
-	fmt.Println("Maghrib =", adhan.Maghrib.Format("15:04"))
-	fmt.Println("Isha    =", adhan.Isha.Format("15:04"))
+	fmt.Println("Fajr    =", result[prayer.Fajr].Format("15:04"))
+	fmt.Println("Sunrise =", result[prayer.Sunrise].Format("15:04"))
+	fmt.Println("Zuhr    =", result[prayer.Zuhr].Format("15:04"))
+	fmt.Println("Asr     =", result[prayer.Asr].Format("15:04"))
+	fmt.Println("Maghrib =", result[prayer.Maghrib].Format("15:04"))
+	fmt.Println("Isha    =", result[prayer.Isha].Format("15:04"))
 }
 ```
 
@@ -56,16 +57,16 @@ Which will give us following results :
 ```
 2009-06-12
 Fajr    = 04:38
-Sunrise = 05:58
-Zuhr    = 11:55
-Asr     = 15:16
+Sunrise = 05:57
+Zuhr    = 11:54
+Asr     = 15:15
 Maghrib = 17:48
-Isha    = 19:02
+Isha    = 19:01
 ```
 
 ## Accuracy
 
-This package have been compared with various programs and the difference has been found to be within three minutes or so. You should bear that in mind and use the `Corrections` field when needed.
+This package have been compared with various programs and the difference has been found to be within three minutes or so. You should bear that in mind and use the `TimeCorrection` field when needed.
 
 ## Resources
 

@@ -18,6 +18,14 @@ func main() {
 		CalculationMethod: prayer.Kemenag,
 		AsrConvention:     prayer.Shafii,
 		PreciseToSeconds:  false,
+		TimeCorrection: prayer.TimeCorrection{
+			prayer.Fajr:    2 * time.Minute,
+			prayer.Sunrise: -time.Minute,
+			prayer.Zuhr:    2 * time.Minute,
+			prayer.Asr:     time.Minute,
+			prayer.Maghrib: time.Minute,
+			prayer.Isha:    time.Minute,
+		},
 	}
 
 	result := calc.Init().SetDate(date).Calculate()
