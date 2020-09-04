@@ -15,17 +15,68 @@ type AngleCorrection map[Target]float64
 
 // Calculator is calculator that used to calculate the prayer times.
 type Calculator struct {
-	Latitude           float64
-	Longitude          float64
-	Elevation          float64
-	FajrAngle          float64
-	IshaAngle          float64
-	MaghribDuration    time.Duration
-	CalculationMethod  CalculationMethod
-	AsrConvention      AsrConvention
-	PreciseToSeconds   bool
-	TimeCorrection     TimeCorrection
-	AngleCorrection    AngleCorrection
+	// Latitude is the latitude of the location. Positive for north
+	// area and negative for south area.
+	Latitude float64
+
+	// Longitude is the longitude of the location. Positive for east
+	// area and negative for west area.
+	Longitude float64
+
+	// Elevation is the elevation of the location above sea level.
+	// It's used to calculate sunrise and sunset. It's fine to omit
+	// this field because the difference will be really small, but
+	// it's better to specify it.
+	Elevation float64
+
+	// CalculationMethod is the method that used for calculating
+	// Fajr and Isha time. It works by specifying Fajr angle, Isha
+	// angle or Maghrib duration following one of the well-known
+	// conventions. By default it will use MWL method.
+	CalculationMethod CalculationMethod
+
+	// FajrAngle is the angle of sun below horizon which mark the
+	// start of Fajr time. If it's specified, the Fajr angle that
+	// provided by CalculationMethod will be ignored.
+	FajrAngle float64
+
+	// IshaAngle is the angle of sun below horizon which mark the
+	// start of Isha time. If it's specified, the Isha angle that
+	// provided by CalculationMethod will be ignored.
+	IshaAngle float64
+
+	// MaghribDuration is the duration between Maghrib and Isha
+	// If it's specified, the Maghrib duration that provided by
+	// CalculationMethod will be ignored. Isha angle will be
+	// ignored as well since the Isha time will be calculated
+	// from Maghrib time.
+	MaghribDuration time.Duration
+
+	// AsrConvention is the convention that used for calculating
+	// Asr time. There are two conventions, Shafii and Hanafi.
+	// By default it will use Shafii.
+	AsrConvention AsrConvention
+
+	// PreciseToSeconds specify whether output time will omit
+	// the seconds or not. If it set to false, the minutes
+	// will be rounded up if seconds >= 30, and rounded down
+	// if seconds less than 30.
+	PreciseToSeconds bool
+
+	// TimeCorrection is map which used to corrects calculated
+	// time for each specified target.
+	TimeCorrection TimeCorrection
+
+	// AngleCorrection is map which used to corrects hour angle
+	// for each specified target. It might be easier to use
+	// `TimeCorrection` instead of this field, but some people
+	// might prefer this.
+	AngleCorrection AngleCorrection
+
+	// HighLatitudeMethods is methods that used for calculating Fajr
+	// and Isha time in higher latitude area (more than 55 degree
+	// from equator) where the sun might never set or rise for an
+	// entire season. By default it will use angle-based method.
 	HighLatitudeMethod HighLatitudeMethods
 
 	latitude       decimal.Decimal
@@ -40,7 +91,8 @@ type Calculator struct {
 	sunDeclination decimal.Decimal
 }
 
-// Init initiates the calculator.
+// Init initiates the calculator. Must be run after changing
+// any fields in Calculator.
 func (calc *Calculator) Init() *Calculator {
 	// Save location
 	calc.latitude = decimal.NewFromFloat(calc.Latitude)
@@ -51,7 +103,7 @@ func (calc *Calculator) Init() *Calculator {
 	var fajrAngle, ishaAngle float64
 
 	switch calc.CalculationMethod {
-	case Default, MWL, Algerian, Diyanet:
+	case MWL, Algerian, Diyanet:
 		fajrAngle, ishaAngle = 18, 17
 	case ISNA:
 		fajrAngle, ishaAngle = 15, 15

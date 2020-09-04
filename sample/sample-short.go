@@ -10,8 +10,12 @@ import (
 )
 
 func main() {
-	// Prepare calculator
-	calc := prayer.Calculator{
+	// Specify the date and timezone.
+	zone := time.FixedZone("WIB", 7*3600)
+	date := time.Date(2020, 9, 4, 0, 0, 0, 0, zone)
+
+	// Do it in one run
+	result := (&prayer.Calculator{
 		Latitude:          -6.21,
 		Longitude:         106.85,
 		Elevation:         50,
@@ -26,21 +30,9 @@ func main() {
 			prayer.Maghrib: time.Minute,
 			prayer.Isha:    time.Minute,
 		},
-	}
+	}).Init().SetDate(date).Calculate()
 
-	// Initiate the calculator. It must be run every time any
-	// parameter in calculator above changed.
-	calc.Init()
-
-	// Specify the date that you want to calculate. This package
-	// will use timezone from your date, so make sure to set it
-	// to the timezone of the location that you want to calculate.
-	zone := time.FixedZone("WIB", 7*3600)
-	date := time.Date(2020, 9, 4, 0, 0, 0, 0, zone)
-	calc.SetDate(date)
-
-	// Now we just need to calculate
-	result := calc.Calculate()
+	// Print result
 	fmt.Println(date.Format("2006-01-02"))
 	fmt.Println("Fajr    =", result[prayer.Fajr].Format("15:04"))
 	fmt.Println("Sunrise =", result[prayer.Sunrise].Format("15:04"))

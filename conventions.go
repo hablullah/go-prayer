@@ -17,12 +17,9 @@ type AsrConvention int
 type HighLatitudeMethods int
 
 const (
-	// Default is the default calculation method with the same value as MWL.
-	Default CalculationMethod = iota
-
 	// MWL is calculation method from Muslim World League with Fajr at 18° and Isha at 17°.
 	// Usually used in Europe, Far East and parts of US.
-	MWL
+	MWL CalculationMethod = iota
 
 	// ISNA is calculation method from Islamic Society of North America with both Fajr and Isha at 15°.
 	// Used in North America i.e US and Canada.
