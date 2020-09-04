@@ -188,13 +188,19 @@ func (calc Calculator) Calculate() map[Target]time.Time {
 		}
 	}
 
-	// If Fajr or Isha is not calculable
-	// but Sunrise and Sunset is, use high latitude rules
+	// If latitude is greater than 48.5, use high latitude rules. If Fajr
+	// or Isha is not calculable but Sunrise and Sunset is, use high
+	// latitude rules as well
+	maxLatitude := decimal.NewFromFloat(48.5)
+	isHigherLatitude := calc.latitude.Abs().GreaterThan(maxLatitude)
+
 	_, hasFajr := times[Fajr]
 	_, hasIsha := times[Isha]
 	sunrise, hasSunrise := times[Sunrise]
 	sunset, hasSunset := times[Maghrib]
-	if (!hasFajr || !hasIsha) && (hasSunrise && hasSunset) {
+	nightPrayerIncalculable := (!hasFajr || !hasIsha) && (hasSunrise && hasSunset)
+
+	if isHigherLatitude || nightPrayerIncalculable {
 		times[Fajr], times[Isha] = calc.adjustHighLatitudeTime(sunrise, sunset)
 	}
 
