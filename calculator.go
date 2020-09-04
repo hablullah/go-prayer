@@ -74,7 +74,7 @@ type Calculator struct {
 	AngleCorrection AngleCorrection
 
 	// HighLatitudeMethods is methods that used for calculating Fajr
-	// and Isha time in higher latitude area (more than 55 degree
+	// and Isha time in higher latitude area (more than 48.5 degree
 	// from equator) where the sun might never set or rise for an
 	// entire season. By default it will use angle-based method.
 	HighLatitudeMethod HighLatitudeMethods
