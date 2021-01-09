@@ -12,6 +12,8 @@ import (
 	"github.com/RadhiFadlillah/go-prayer"
 )
 
+const diffThreshold = 1
+
 // These data must be identical with the one in test/generator.go
 var timezones = map[string]int{
 	"ottawa":     -5,
@@ -24,81 +26,132 @@ var timezones = map[string]int{
 	"wellington": 13,
 }
 
-var calculators = map[string]*prayer.Calculator{
-	"ottawa": (&prayer.Calculator{
+var configs = map[string]prayer.Config{
+	"ottawa": {
 		Latitude:          45.424722,
 		Longitude:         -75.695,
 		Elevation:         76,
 		CalculationMethod: prayer.ISNA,
 		PreciseToSeconds:  true,
-	}).Init(),
-	"cairo": (&prayer.Calculator{
+	},
+	"cairo": {
 		Latitude:          30.033333,
 		Longitude:         31.233333,
 		Elevation:         22,
 		CalculationMethod: prayer.Egypt,
 		PreciseToSeconds:  true,
-	}).Init(),
-	"sana": (&prayer.Calculator{
+	},
+	"sana": {
 		Latitude:          15.348333,
 		Longitude:         44.206389,
 		Elevation:         2266,
 		CalculationMethod: prayer.UmmAlQura,
 		PreciseToSeconds:  true,
-	}).Init(),
-	"singapore": (&prayer.Calculator{
+	},
+	"singapore": {
 		Latitude:          1.283333,
 		Longitude:         103.833333,
 		Elevation:         93,
 		CalculationMethod: prayer.MUIS,
 		PreciseToSeconds:  true,
-	}).Init(),
-	"brasilia": (&prayer.Calculator{
+	},
+	"brasilia": {
 		Latitude:          -15.793889,
 		Longitude:         -47.882778,
 		Elevation:         1091,
 		CalculationMethod: prayer.MWL,
 		PreciseToSeconds:  true,
-	}).Init(),
-	"maputo": (&prayer.Calculator{
+	},
+	"maputo": {
 		Latitude:          -25.966667,
 		Longitude:         32.583333,
 		Elevation:         20,
 		CalculationMethod: prayer.MWL,
 		PreciseToSeconds:  true,
-	}).Init(),
-	"canberra": (&prayer.Calculator{
+	},
+	"canberra": {
 		Latitude:          -35.293056,
 		Longitude:         149.126944,
 		Elevation:         577,
 		CalculationMethod: prayer.MWL,
 		PreciseToSeconds:  true,
-	}).Init(),
-	"wellington": (&prayer.Calculator{
+	},
+	"wellington": {
 		Latitude:          -41.288889,
 		Longitude:         174.777222,
 		Elevation:         13,
 		CalculationMethod: prayer.MWL,
 		PreciseToSeconds:  true,
-	}).Init(),
+	},
 }
 
 func Test_Calculator(t *testing.T) {
-	for city, calc := range calculators {
+	for city, cfg := range configs {
 		testData, err := openTestData(city)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		for _, data := range testData {
-			result := calc.SetDate(data.Date).Calculate()
-			diff := data.Fajr.Sub(result[prayer.Fajr]).Seconds()
-			if math.Abs(diff) > 0 {
+			result, _ := prayer.Calculate(cfg, data.Date)
+
+			diff := data.Fajr.Sub(result.Fajr).Seconds()
+			if math.Abs(diff) > diffThreshold {
 				t.Errorf("%s, %s, Fajr: want %s got %s (%v)\n",
 					strings.ToUpper(city),
 					data.Date.Format("2006-01-02"),
 					data.Fajr.Format("15:04:05"),
-					result[prayer.Fajr].Format("15:04:05"),
+					result.Fajr.Format("15:04:05"),
+					diff)
+			}
+
+			diff = data.Sunrise.Sub(result.Sunrise).Seconds()
+			if math.Abs(diff) > diffThreshold {
+				t.Errorf("%s, %s, Sunrise: want %s got %s (%v)\n",
+					strings.ToUpper(city),
+					data.Date.Format("2006-01-02"),
+					data.Sunrise.Format("15:04:05"),
+					result.Sunrise.Format("15:04:05"),
+					diff)
+			}
+
+			diff = data.Zuhr.Sub(result.Zuhr).Seconds()
+			if math.Abs(diff) > diffThreshold {
+				t.Errorf("%s, %s, Zuhr: want %s got %s (%v)\n",
+					strings.ToUpper(city),
+					data.Date.Format("2006-01-02"),
+					data.Zuhr.Format("15:04:05"),
+					result.Zuhr.Format("15:04:05"),
+					diff)
+			}
+
+			diff = data.Asr.Sub(result.Asr).Seconds()
+			if math.Abs(diff) > diffThreshold {
+				t.Errorf("%s, %s, Asr: want %s got %s (%v)\n",
+					strings.ToUpper(city),
+					data.Date.Format("2006-01-02"),
+					data.Asr.Format("15:04:05"),
+					result.Asr.Format("15:04:05"),
+					diff)
+			}
+
+			diff = data.Maghrib.Sub(result.Maghrib).Seconds()
+			if math.Abs(diff) > diffThreshold {
+				t.Errorf("%s, %s, Maghrib: want %s got %s (%v)\n",
+					strings.ToUpper(city),
+					data.Date.Format("2006-01-02"),
+					data.Maghrib.Format("15:04:05"),
+					result.Maghrib.Format("15:04:05"),
+					diff)
+			}
+
+			diff = data.Isha.Sub(result.Isha).Seconds()
+			if math.Abs(diff) > diffThreshold {
+				t.Errorf("%s, %s, Isha: want %s got %s (%v)\n",
+					strings.ToUpper(city),
+					data.Date.Format("2006-01-02"),
+					data.Isha.Format("15:04:05"),
+					result.Isha.Format("15:04:05"),
 					diff)
 			}
 		}
