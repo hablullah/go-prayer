@@ -264,8 +264,9 @@ func adjustHighLatitudeTimes(cfg Config, times Times) Times {
 		return times
 	}
 
-	// This adjustment only occurs in latitude between 48.6 and 66.6
-	if cfg.Latitude < 48.6 || cfg.Latitude > 66.6 {
+	// This adjustment only occurs in latitude between 48.6 and 66.6 north and south
+	absLatitude := math.Abs(cfg.Latitude)
+	if absLatitude < 48.6 || absLatitude > 66.6 {
 		return times
 	}
 
