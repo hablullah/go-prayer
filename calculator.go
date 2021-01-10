@@ -71,44 +71,67 @@ type Config struct {
 	// HighLatitudeMethods is methods that used for calculating Fajr and Isha time in higher latitude area
 	// (more than 45 degree from equator) where the sun might never set or rise for an entire season. By
 	// default it will use angle-based method.
-	HighLatitudeMethod HighLatitudeMethods
+	HighLatitudeMethod HighLatitudeMethod
 }
 
 func Calculate(cfg Config, date time.Time) (Times, error) {
+	cfg = adjustHighLatitudeConfig(cfg)
+
+	times, err := calculate(cfg, date)
+	if err != nil {
+		return Times{}, err
+	}
+
+	times = applyTimeCorrections(cfg, times)
+	return times, nil
+}
+
+func calculate(cfg Config, date time.Time) (Times, error) {
 	// For initial calculation, get prayer times using noon as base time
 	date = time.Date(date.Year(), date.Month(), date.Day(), 12, 0, 0, 0, date.Location())
-	times, err := calculate(cfg, date)
+	times, err := calculateByBase(cfg, date)
 	if err != nil {
 		return Times{}, err
 	}
 
 	// To increase accuracy, redo calculation for each prayer using initial time as base.
 	// The increased accuracy is not really much though, only around 1-15 seconds.
-	accTimes, _ := calculate(cfg, times.Fajr)
-	times.Fajr = accTimes.Fajr
+	if !times.Fajr.IsZero() {
+		accTimes, _ := calculateByBase(cfg, times.Fajr)
+		times.Fajr = accTimes.Fajr
+	}
 
-	accTimes, _ = calculate(cfg, times.Sunrise)
-	times.Sunrise = accTimes.Sunrise
+	if !times.Sunrise.IsZero() {
+		accTimes, _ := calculateByBase(cfg, times.Sunrise)
+		times.Sunrise = accTimes.Sunrise
+	}
 
-	accTimes, _ = calculate(cfg, times.Zuhr)
-	times.Zuhr = accTimes.Zuhr
+	if !times.Zuhr.IsZero() {
+		accTimes, _ := calculateByBase(cfg, times.Zuhr)
+		times.Zuhr = accTimes.Zuhr
+	}
 
-	accTimes, _ = calculate(cfg, times.Asr)
-	times.Asr = accTimes.Asr
+	if !times.Asr.IsZero() {
+		accTimes, _ := calculateByBase(cfg, times.Asr)
+		times.Asr = accTimes.Asr
+	}
 
-	accTimes, _ = calculate(cfg, times.Maghrib)
-	times.Maghrib = accTimes.Maghrib
+	if !times.Maghrib.IsZero() {
+		accTimes, _ := calculateByBase(cfg, times.Maghrib)
+		times.Maghrib = accTimes.Maghrib
+	}
 
-	accTimes, _ = calculate(cfg, times.Isha)
-	times.Isha = accTimes.Isha
+	if !times.Isha.IsZero() {
+		accTimes, _ := calculateByBase(cfg, times.Isha)
+		times.Isha = accTimes.Isha
+	}
 
-	// Adjust prayer time in higher latitude and apply corrections
+	// Adjust prayer time in higher latitude
 	times = adjustHighLatitudeTimes(cfg, times)
-	times = applyTimeCorrections(cfg, times)
 	return times, nil
 }
 
-func calculate(cfg Config, baseTime time.Time) (Times, error) {
+func calculateByBase(cfg Config, baseTime time.Time) (Times, error) {
 	// Calculate Julian Days
 	jd, err := juliandays.FromTime(baseTime)
 	if err != nil {
@@ -258,56 +281,99 @@ func minutesToTime(cfg Config, date time.Time, minutes float64) time.Time {
 	}
 }
 
-func adjustHighLatitudeTimes(cfg Config, times Times) Times {
-	// Algorithm for calculating times in high latitude requires sunrise and sunset to be exist
-	if times.Sunrise.IsZero() || times.Maghrib.IsZero() {
-		return times
-	}
-
-	// This adjustment only occurs in latitude between 48.6 and 66.6 north and south
-	absLatitude := math.Abs(cfg.Latitude)
-	if absLatitude < 48.6 || absLatitude > 66.6 {
-		return times
-	}
-
-	// Get Fajr and Isha angle
-	fajrAngle, ishaAngle, maghribDuration := getNightPrayerConfig(cfg)
-
-	// Calculate night duration
-	dayDuration := times.Maghrib.Sub(times.Sunrise).Minutes()
-	nightDuration := (24 * 60) - dayDuration
-
-	// Calculate night portion
-	var fajrPortion, ishaPortion float64
-	switch cfg.HighLatitudeMethod {
-	case MiddleNight:
-		fajrPortion = 0.5
-		ishaPortion = 0.5
-	case OneSeventhNight:
-		fajrPortion = 1 / 7
-		ishaPortion = 1 / 7
-	default:
-		fajrPortion = fajrAngle / 60
-		ishaPortion = ishaAngle / 60
-	}
-
-	// Calculate new Fajr time
-	fajrDuration := math.Round(fajrPortion * nightDuration)
-	newFajr := times.Sunrise.Add(time.Duration(-fajrDuration) * time.Minute)
-	if times.Fajr.IsZero() || newFajr.After(times.Fajr) {
-		times.Fajr = newFajr
-	}
-
-	// Calculate new Isha time
-	if maghribDuration == 0 {
-		ishaDuration := math.Round(ishaPortion * nightDuration)
-		newIsha := times.Maghrib.Add(time.Duration(ishaDuration) * time.Minute)
-		if times.Isha.IsZero() || newIsha.Before(times.Isha) {
-			times.Isha = newIsha
+func adjustHighLatitudeConfig(cfg Config) Config {
+	// If high latitude convention is forced normal region, any latitude above (or below) 45 N(S)
+	// will be changed to 45
+	if cfg.HighLatitudeMethod == ForcedNormalRegion {
+		if cfg.Latitude > 45 {
+			cfg.Latitude = 45
+		} else if cfg.Latitude < -45 {
+			cfg.Latitude = -45
 		}
 	}
 
-	return times
+	return cfg
+}
+
+func adjustHighLatitudeTimes(cfg Config, times Times) Times {
+	switch cfg.HighLatitudeMethod {
+	case NormalRegion:
+		// This adjustment only used in area above latitude 45 (north and south)
+		if math.Abs(cfg.Latitude) <= 45 {
+			return times
+		}
+
+		// Make sure the fasting time is outside normal
+		// The normal fasting duration is between 10h 17m and 17h 36m
+		fastingDuration := times.Maghrib.Sub(times.Fajr).Minutes()
+		if fastingDuration >= 617 && fastingDuration <= 1056 {
+			return times
+		}
+
+		// Convert latitude to 45
+		if cfg.Latitude > 0 {
+			cfg.Latitude = 45
+		} else {
+			cfg.Latitude = -45
+		}
+
+		adjustedTimes, _ := calculate(cfg, times.Zuhr)
+		return adjustedTimes
+
+	case AngleBased, OneSeventhNight, MiddleNight:
+		// These conventions requires sunrise and sunset to be exist
+		if times.Sunrise.IsZero() || times.Maghrib.IsZero() {
+			return times
+		}
+
+		// This adjustment only used in latitude between 48.6 and 66.6 north and south
+		absLatitude := math.Abs(cfg.Latitude)
+		if absLatitude < 48.6 || absLatitude > 66.6 {
+			return times
+		}
+
+		// Get Fajr and Isha angle
+		fajrAngle, ishaAngle, maghribDuration := getNightPrayerConfig(cfg)
+
+		// Calculate night duration
+		dayDuration := times.Maghrib.Sub(times.Sunrise).Minutes()
+		nightDuration := (24 * 60) - dayDuration
+
+		// Calculate night portion
+		var fajrPortion, ishaPortion float64
+		switch cfg.HighLatitudeMethod {
+		case MiddleNight:
+			fajrPortion = 0.5
+			ishaPortion = 0.5
+		case OneSeventhNight:
+			fajrPortion = 1 / 7
+			ishaPortion = 1 / 7
+		default:
+			fajrPortion = fajrAngle / 60
+			ishaPortion = ishaAngle / 60
+		}
+
+		// Calculate new Fajr time
+		fajrDuration := math.Round(fajrPortion * nightDuration)
+		newFajr := times.Sunrise.Add(time.Duration(-fajrDuration) * time.Minute)
+		if times.Fajr.IsZero() || newFajr.After(times.Fajr) {
+			times.Fajr = newFajr
+		}
+
+		// Calculate new Isha time
+		if maghribDuration == 0 {
+			ishaDuration := math.Round(ishaPortion * nightDuration)
+			newIsha := times.Maghrib.Add(time.Duration(ishaDuration) * time.Minute)
+			if times.Isha.IsZero() || newIsha.Before(times.Isha) {
+				times.Isha = newIsha
+			}
+		}
+
+		return times
+
+	default:
+		return times
+	}
 }
 
 func applyTimeCorrections(cfg Config, times Times) Times {

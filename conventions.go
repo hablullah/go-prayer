@@ -1,20 +1,14 @@
 package prayer
 
 // CalculationMethod is the conventions for calculating prayer times, especially Fajr and Isha.
-// For references, check these website :
-// - http://praytimes.org/wiki/Calculation_Methods
-// - http://www.islamicfinder.us/index.php/api/index
-// - https://www.muslimpro.com/en/prayer-times
 type CalculationMethod int
 
-// AsrConvention is the conventions for calculating Asr time.
-// For details, check http://www.prayerminder.com/faq.php#Fiqh.
+// AsrConvention is the convention for calculating Asr time.
 type AsrConvention int
 
-// HighLatitudeMethods is the methods for calculating Fajr and Isha
-// time in area with higher latitude (more than 50N or 50S).
-// For details, check http://praytimes.org/calculation.
-type HighLatitudeMethods int
+// HighLatitudeMethod is the method for calculating prayer time in area with higher latitude
+// (more than 45N or 45S).
+type HighLatitudeMethod int
 
 const (
 	// MWL is calculation method from Muslim World League with Fajr at 18° and Isha at 17°.
@@ -89,33 +83,45 @@ const (
 )
 
 const (
-	// Shafii is the school which said that the Asr time is when the shadow of
-	// an object is equals the length of the object plus the length of its shadow
-	// when the sun is at its zenith.
+	// Shafii is the school which said that the Asr time is when the shadow of an object is equals the
+	// length of the object plus the length of its shadow when the sun is at its zenith.
 	Shafii AsrConvention = iota
 
-	// Hanafi is the school which said that the Asr time is when the shadow of
-	// an object is twice the length of the object plus the length of its shadow
-	// when the sun is at its zenith.
+	// Hanafi is the school which said that the Asr time is when the shadow of an object is twice the
+	// length of the object plus the length of its shadow when the sun is at its zenith.
 	Hanafi
 )
 
 const (
-	// AngleBased is method that used by some recent prayer time calculators. Let a
-	// be the twilight angle for Isha, and let t = a/60. The period between sunset
-	// and sunrise is divided into t parts. Isha begins after the first part. For
-	// example, if the twilight angle for Isha is 15, then Isha begins at the end
-	// of the first quarter (15/60) of the night. Time for Fajr is calculated similarly.
-	AngleBased HighLatitudeMethods = iota
+	// AngleBased is method that created after conference between Muslim scholars in Brussels, 25-26 May
+	// 2009. It's one of the most common method and used by some recent prayer time calculators. Let a
+	// be the twilight angle for Isha, and let t = a/60. The period between sunset and sunrise is divided
+	// into t parts. Isha begins after the first part. For example, if the twilight angle for Isha is 15,
+	// then Isha begins at the end of the first quarter (15/60) of the night. Time for Fajr is calculated
+	// similarly. This method is only used in area between 48.6 and 66.6 latitude.
+	AngleBased HighLatitudeMethod = iota
 
-	// OneSevenNight is method where the period between sunset and sunrise is divided
-	// into seven parts. Isha begins after the first one-seventh part, and Fajr is at
-	// the beginning of the seventh part.
+	// OneSevenNight is method where the period between sunset and sunrise is divided into seven parts.
+	// Isha starts when the first seventh part ends, and Fajr starts when the last seventh part starts.
+	// Like angle-based, this method is only used in area between 48.6 and 66.6 latitude.
 	OneSeventhNight
 
-	// MiddleNight is method where the period from sunset to sunrise is divided into
-	// two halves. The first half is considered to be the "night" and the other half
-	// as "day break". Fajr and Isha in this method are assumed to be at mid-night
-	// during the abnormal periods.
+	// MiddleNight is method where the period from sunset to sunrise is divided into two halves. The first
+	// half is considered to be the "night" and the other half as "day break". Fajr and Isha in this method
+	// are assumed to be at mid-night during the abnormal periods. Like angle-based, this method is only
+	// used in area between 48.6 and 66.6 latitude.
 	MiddleNight
+
+	// NormalRegion is the latest method (from 2014), created by Mohamed Nabeel Tarabishy, Ph.D. In this
+	// method, if in a day the fasting time (duration between Fajr and Sunset) is too short (less than 10h
+	// 17m) or too long (more than 17h 36m), then that day is considered abnormal. In those abnormal days,
+	// the prayer times is calculated by setting the latitude into 45. With that said, this method only
+	// used in area above 45 latitude.
+	NormalRegion
+
+	// ForcedNormalRegion is similar with NormalRegion method. The difference is in this method, all area
+	// above 45 latitude will be calculated as if it's located at latitude 45. This is because when using
+	// NormalRegion method, there will be sudden changes in the length of the day of fasting so for some
+	// cases it might be better to set the latitude permanently into 45 degrees.
+	ForcedNormalRegion
 )

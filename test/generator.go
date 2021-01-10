@@ -12,17 +12,35 @@ import (
 )
 
 var timezones = map[string]int{
-	"ottawa":     -5,
-	"cairo":      2,
-	"sana":       3,
-	"singapore":  8,
-	"brasilia":   -3,
-	"maputo":     2,
-	"canberra":   11,
-	"wellington": 13,
+	"longyearbyen": 1,
+	"oslo":         1,
+	"ottawa":       -5,
+	"cairo":        2,
+	"sana":         3,
+	"singapore":    8,
+	"brasilia":     -3,
+	"maputo":       2,
+	"canberra":     11,
+	"wellington":   13,
+	"king-edward":  -2,
 }
 
 var configs = map[string]prayer.Config{
+	"longyearbyen": {
+		Latitude:           78.216667,
+		Longitude:          15.633333,
+		Elevation:          20,
+		CalculationMethod:  prayer.MWL,
+		PreciseToSeconds:   true,
+		HighLatitudeMethod: prayer.NormalRegion,
+	},
+	"oslo": {
+		Latitude:          59.913889,
+		Longitude:         10.752222,
+		Elevation:         11,
+		CalculationMethod: prayer.MWL,
+		PreciseToSeconds:  true,
+	},
 	"ottawa": {
 		Latitude:          45.424722,
 		Longitude:         -75.695,
@@ -76,6 +94,13 @@ var configs = map[string]prayer.Config{
 		Latitude:          -41.288889,
 		Longitude:         174.777222,
 		Elevation:         13,
+		CalculationMethod: prayer.MWL,
+		PreciseToSeconds:  true,
+	},
+	"king-edward": {
+		Latitude:          -54.283333,
+		Longitude:         -36.5,
+		Elevation:         3,
 		CalculationMethod: prayer.MWL,
 		PreciseToSeconds:  true,
 	},
