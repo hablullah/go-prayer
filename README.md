@@ -7,6 +7,68 @@ Go-Prayer is a Go package for calculating prayer/salah times for a specific loca
 should be accurate enough for most case and you can adjust the times if needed. However, you can alter the
 result by using `TimeCorrections` field in config.
 
+## Usage
+
+For example, we want to get prayer times in Jakarta, Indonesia, at 4 September 2020 :
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+
+	"github.com/RadhiFadlillah/go-prayer"
+)
+
+func main() {
+	// Prepare configuration
+	cfg := prayer.Config{
+		Latitude:          -6.21,
+		Longitude:         106.85,
+		Elevation:         50,
+		CalculationMethod: prayer.Kemenag,
+		AsrConvention:     prayer.Shafii,
+		PreciseToSeconds:  false,
+		TimeCorrections: prayer.TimeCorrections{
+			Fajr:    2 * time.Minute,
+			Sunrise: -time.Minute,
+			Zuhr:    2 * time.Minute,
+			Asr:     time.Minute,
+			Maghrib: time.Minute,
+			Isha:    time.Minute,
+		},
+	}
+
+	// Specify the date that you want to calculate. This package will use timezone from your date,
+	// so make sure to set it to the timezone of the location that you want to calculate.
+	zone := time.FixedZone("WIB", 7*3600)
+	date := time.Date(2020, 9, 4, 0, 0, 0, 0, zone)
+
+	// Now we just need to calculate it
+	result, _ := prayer.Calculate(cfg, date)
+	fmt.Println(date.Format("2006-01-02"))
+	fmt.Println("Fajr    =", result.Fajr.Format("15:04"))
+	fmt.Println("Sunrise =", result.Sunrise.Format("15:04"))
+	fmt.Println("Zuhr    =", result.Zuhr.Format("15:04"))
+	fmt.Println("Asr     =", result.Asr.Format("15:04"))
+	fmt.Println("Maghrib =", result.Maghrib.Format("15:04"))
+	fmt.Println("Isha    =", result.Isha.Format("15:04"))
+}
+```
+
+Which will give us following results :
+
+```
+2020-09-04
+Fajr    = 04:36
+Sunrise = 05:49
+Zuhr    = 11:54
+Asr     = 15:10
+Maghrib = 17:54
+Isha    = 19:02
+```
+
 ## Calculation Result
 
 There are five times that will be calculated by this package:
@@ -140,68 +202,6 @@ However, by using this method there will be sudden changes in the length of the 
 proposed for area above 45 latitude to just calculate the prayer times as if the latitude is 45 degrees,
 no matter if the day is abnormal or not. If you want to use this method, it's named as `ForcedNormalRegion`
 in this package.
-
-## Code Examples
-
-For example, we want to get prayer times in Jakarta, Indonesia, at 4 September 2020 :
-
-```go
-package main
-
-import (
-	"fmt"
-	"time"
-
-	"github.com/RadhiFadlillah/go-prayer"
-)
-
-func main() {
-	// Prepare configuration
-	cfg := prayer.Config{
-		Latitude:          -6.21,
-		Longitude:         106.85,
-		Elevation:         50,
-		CalculationMethod: prayer.Kemenag,
-		AsrConvention:     prayer.Shafii,
-		PreciseToSeconds:  false,
-		TimeCorrections: prayer.TimeCorrections{
-			Fajr:    2 * time.Minute,
-			Sunrise: -time.Minute,
-			Zuhr:    2 * time.Minute,
-			Asr:     time.Minute,
-			Maghrib: time.Minute,
-			Isha:    time.Minute,
-		},
-	}
-
-	// Specify the date that you want to calculate. This package will use timezone from your date,
-	// so make sure to set it to the timezone of the location that you want to calculate.
-	zone := time.FixedZone("WIB", 7*3600)
-	date := time.Date(2020, 9, 4, 0, 0, 0, 0, zone)
-
-	// Now we just need to calculate it
-	result, _ := prayer.Calculate(cfg, date)
-	fmt.Println(date.Format("2006-01-02"))
-	fmt.Println("Fajr    =", result.Fajr.Format("15:04"))
-	fmt.Println("Sunrise =", result.Sunrise.Format("15:04"))
-	fmt.Println("Zuhr    =", result.Zuhr.Format("15:04"))
-	fmt.Println("Asr     =", result.Asr.Format("15:04"))
-	fmt.Println("Maghrib =", result.Maghrib.Format("15:04"))
-	fmt.Println("Isha    =", result.Isha.Format("15:04"))
-}
-```
-
-Which will give us following results :
-
-```
-2020-09-04
-Fajr    = 04:36
-Sunrise = 05:49
-Zuhr    = 11:54
-Asr     = 15:10
-Maghrib = 17:54
-Isha    = 19:02
-```
 
 ## Resources
 
