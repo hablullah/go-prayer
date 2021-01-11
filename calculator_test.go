@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/RadhiFadlillah/go-prayer"
+	"github.com/hablullah/go-prayer"
 )
 
 const diffThreshold = 1

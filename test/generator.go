@@ -8,7 +8,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/RadhiFadlillah/go-prayer"
+	"github.com/hablullah/go-prayer"
 )
 
 var timezones = map[string]int{
