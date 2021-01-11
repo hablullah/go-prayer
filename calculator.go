@@ -45,15 +45,15 @@ type Config struct {
 	// it will use MWL method.
 	CalculationMethod CalculationMethod
 
-	// FajrAngle is the angle of sun below horizon which mark the start of Fajr time. If it's specified,
+	// FajrAngle is the altitude of Sun below horizon which mark the start of Fajr time. If it's specified,
 	// the Fajr angle that provided by CalculationMethod will be ignored.
 	FajrAngle float64
 
-	// IshaAngle is the angle of sun below horizon which mark the start of Isha time. If it's specified,
+	// IshaAngle is the altitude of Sun below horizon which mark the start of Isha time. If it's specified,
 	// the Isha angle that provided by CalculationMethod will be ignored.
 	IshaAngle float64
 
-	// MaghribDuration is the duration between Maghrib and Isha If it's specified, the Maghrib duration
+	// MaghribDuration is the duration between Maghrib and Isha. If it's specified, the Maghrib duration
 	// that provided by CalculationMethod will be ignored. Isha angle will be ignored as well since the
 	// Isha time will be calculated from Maghrib time.
 	MaghribDuration time.Duration
@@ -69,11 +69,12 @@ type Config struct {
 	TimeCorrections TimeCorrections
 
 	// HighLatitudeMethods is methods that used for calculating Fajr and Isha time in higher latitude area
-	// (more than 45 degree from equator) where the sun might never set or rise for an entire season. By
+	// (more than 45 degree from equator) where the Sun might never set or rise for an entire season. By
 	// default it will use angle-based method.
 	HighLatitudeMethod HighLatitudeMethod
 }
 
+// Calculate calculates the prayer time for specified date with specified configuration.
 func Calculate(cfg Config, date time.Time) (Times, error) {
 	cfg = adjustHighLatitudeConfig(cfg)
 

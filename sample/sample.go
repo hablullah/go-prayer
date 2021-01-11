@@ -10,42 +10,36 @@ import (
 )
 
 func main() {
-	// Prepare calculator
-	calc := prayer.Calculator{
+	// Prepare configuration
+	cfg := prayer.Config{
 		Latitude:          -6.21,
 		Longitude:         106.85,
 		Elevation:         50,
 		CalculationMethod: prayer.Kemenag,
 		AsrConvention:     prayer.Shafii,
 		PreciseToSeconds:  false,
-		TimeCorrection: prayer.TimeCorrection{
-			prayer.Fajr:    2 * time.Minute,
-			prayer.Sunrise: -time.Minute,
-			prayer.Zuhr:    2 * time.Minute,
-			prayer.Asr:     time.Minute,
-			prayer.Maghrib: time.Minute,
-			prayer.Isha:    time.Minute,
+		TimeCorrections: prayer.TimeCorrections{
+			Fajr:    2 * time.Minute,
+			Sunrise: -time.Minute,
+			Zuhr:    2 * time.Minute,
+			Asr:     time.Minute,
+			Maghrib: time.Minute,
+			Isha:    time.Minute,
 		},
 	}
 
-	// Initiate the calculator. It must be run every time any
-	// parameter in calculator above changed.
-	calc.Init()
-
-	// Specify the date that you want to calculate. This package
-	// will use timezone from your date, so make sure to set it
-	// to the timezone of the location that you want to calculate.
+	// Specify the date that you want to calculate. This package will use timezone from your date,
+	// so make sure to set it to the timezone of the location that you want to calculate.
 	zone := time.FixedZone("WIB", 7*3600)
 	date := time.Date(2020, 9, 4, 0, 0, 0, 0, zone)
-	calc.SetDate(date)
 
-	// Now we just need to calculate
-	result := calc.Calculate()
+	// Now we just need to calculate it
+	result, _ := prayer.Calculate(cfg, date)
 	fmt.Println(date.Format("2006-01-02"))
-	fmt.Println("Fajr    =", result[prayer.Fajr].Format("15:04"))
-	fmt.Println("Sunrise =", result[prayer.Sunrise].Format("15:04"))
-	fmt.Println("Zuhr    =", result[prayer.Zuhr].Format("15:04"))
-	fmt.Println("Asr     =", result[prayer.Asr].Format("15:04"))
-	fmt.Println("Maghrib =", result[prayer.Maghrib].Format("15:04"))
-	fmt.Println("Isha    =", result[prayer.Isha].Format("15:04"))
+	fmt.Println("Fajr    =", result.Fajr.Format("15:04"))
+	fmt.Println("Sunrise =", result.Sunrise.Format("15:04"))
+	fmt.Println("Zuhr    =", result.Zuhr.Format("15:04"))
+	fmt.Println("Asr     =", result.Asr.Format("15:04"))
+	fmt.Println("Maghrib =", result.Maghrib.Format("15:04"))
+	fmt.Println("Isha    =", result.Isha.Format("15:04"))
 }

@@ -12,7 +12,7 @@ type HighLatitudeMethod int
 
 const (
 	// MWL is calculation method from Muslim World League with Fajr at 18° and Isha at 17°.
-	// Usually used in Europe, Far East and parts of US.
+	// Usually used in Europe, Far East and parts of America.
 	MWL CalculationMethod = iota
 
 	// ISNA is calculation method from Islamic Society of North America with both Fajr and Isha at 15°.
@@ -77,18 +77,18 @@ const (
 	// Fajr at 17.7° and Isha at 14°.
 	Tehran
 
-	// Jafari is calcuation method from Shia Ithna Ashari that used in some Shia communities worldwide.
+	// Jafari is calculation method from Shia Ithna Ashari that used in some Shia communities worldwide.
 	// Fajr at 16° and Isha at 14°.
 	Jafari
 )
 
 const (
 	// Shafii is the school which said that the Asr time is when the shadow of an object is equals the
-	// length of the object plus the length of its shadow when the sun is at its zenith.
+	// length of the object plus the length of its shadow when the Sun is at its zenith.
 	Shafii AsrConvention = iota
 
 	// Hanafi is the school which said that the Asr time is when the shadow of an object is twice the
-	// length of the object plus the length of its shadow when the sun is at its zenith.
+	// length of the object plus the length of its shadow when the Sun is at its zenith.
 	Hanafi
 )
 
@@ -101,7 +101,7 @@ const (
 	// similarly. This method is only used in area between 48.6 and 66.6 latitude.
 	AngleBased HighLatitudeMethod = iota
 
-	// OneSevenNight is method where the period between sunset and sunrise is divided into seven parts.
+	// OneSeventhNight is method where the period between sunset and sunrise is divided into seven parts.
 	// Isha starts when the first seventh part ends, and Fajr starts when the last seventh part starts.
 	// Like angle-based, this method is only used in area between 48.6 and 66.6 latitude.
 	OneSeventhNight
