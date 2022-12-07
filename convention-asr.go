@@ -12,3 +12,10 @@ const (
 	// length of the object plus the length of its shadow when the Sun is at its zenith.
 	Hanafi
 )
+
+func getAsrCoefficient(cv AsrConvention) float64 {
+	if cv == Hanafi {
+		return 2
+	}
+	return 1
+}
