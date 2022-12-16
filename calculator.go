@@ -7,8 +7,8 @@ import (
 	"github.com/hablullah/go-sampa"
 )
 
-// Times is the result of calculation.
-type Times struct {
+// PrayerSchedule is the result of prayer time calculation.
+type PrayerSchedule struct {
 	// Date is the ISO date, useful for logging.
 	Date string
 
@@ -33,8 +33,8 @@ type Times struct {
 	Isha time.Time
 }
 
-// TimeCorrections is correction for each prayer time.
-type TimeCorrections struct {
+// ScheduleCorrections is correction for each prayer time.
+type ScheduleCorrections struct {
 	Fajr    time.Duration
 	Sunrise time.Duration
 	Zuhr    time.Duration
@@ -71,15 +71,15 @@ type Config struct {
 	// (>=48 degrees). By default it will use `LocalRelativeEstimation`.
 	HighLatConvention HighLatConvention
 
-	// TimeCorrections is used to corrects calculated time for each specified prayer.
-	TimeCorrections TimeCorrections
+	// Corrections is used to corrects calculated time for each specified prayer.
+	Corrections ScheduleCorrections
 
 	// PreciseToSeconds specify whether output time will omit the seconds or not.
 	PreciseToSeconds bool
 }
 
 // Calculate calculates the prayer time for the entire year with specified configuration.
-func Calculate(cfg Config, year int) ([]Times, error) {
+func Calculate(cfg Config, year int) ([]PrayerSchedule, error) {
 	// Apply default config
 	if cfg.TwilightConvention == nil {
 		cfg.TwilightConvention = AstronomicalTwilight
@@ -116,41 +116,131 @@ func Calculate(cfg Config, year int) ([]Times, error) {
 		},
 	}}
 
-	// Loop for every day of the year
-	var prayerTimes []Times
-	for dt := time.Date(year, 1, 1, 12, 0, 0, 0, cfg.Timezone); dt.Year() == year; dt = dt.AddDate(0, 0, 1) {
-		// Calculate Sun events
-		events, err := sampa.GetSunEvents(dt, location, nil, customEvents...)
-		if err != nil {
-			return nil, err
-		}
+	// Calculate schedules for each day in a year. Here we also calculate the first day
+	// of next year and the last day of the previous year. This is useful to check if
+	// some schedules chained to tomorrow or yesterday events.
+	base := time.Date(year, 1, 1, 0, 0, 0, 0, cfg.Timezone)
+	start := base.AddDate(0, 0, -1)
+	limit := base.AddDate(1, 0, 0)
+	nDays := int(limit.Sub(start).Hours()/24) + 1
 
-		// Extract the time
-		fajr := events.Others["fajr"].DateTime
-		sunrise := events.Sunrise.DateTime
-		zuhr := events.Transit.DateTime
-		asr := events.Others["asr"].DateTime
-		maghrib := events.Sunset.DateTime
-		isha := events.Others["isha"].DateTime
+	// Create slice to contain result
+	schedules := make([]PrayerSchedule, nDays)
 
-		// Save the times
-		prayerTimes = append(prayerTimes, Times{
-			Date:    dt.Format("2006-01-02"),
-			Fajr:    applyTc(fajr, cfg.TimeCorrections.Fajr),
-			Sunrise: applyTc(sunrise, cfg.TimeCorrections.Sunrise),
-			Zuhr:    applyTc(zuhr, cfg.TimeCorrections.Zuhr),
-			Asr:     applyTc(asr, cfg.TimeCorrections.Asr),
-			Maghrib: applyTc(maghrib, cfg.TimeCorrections.Maghrib),
-			Isha:    applyTc(isha, cfg.TimeCorrections.Isha),
-		})
+	// Calculate each day
+	var idx int
+	for dt := start; !dt.After(limit); dt = dt.AddDate(0, 0, 1) {
+		// Calculate the schedules
+		e, _ := sampa.GetSunEvents(dt, location, nil, customEvents...)
+		transit := e.Transit.DateTime
 
-		// TODO: Calculate time for high latitude
+		fajr := e.Others["fajr"].DateTime
+		sunrise := e.Sunrise.DateTime
+		asr := e.Others["asr"].DateTime
+		maghrib := e.Sunset.DateTime
+		isha := e.Others["isha"].DateTime
+
+		// Adjust the index
+		fajrIdx := adjustScheduleIdx(schedules, idx, fajr, transit, true)
+		sunriseIdx := adjustScheduleIdx(schedules, idx, sunrise, transit, true)
+		maghribIdx := adjustScheduleIdx(schedules, idx, maghrib, transit, false)
+		ishaIdx := adjustScheduleIdx(schedules, idx, isha, transit, false)
+
+		// Save the schedules
+		schedules[idx].Date = dt.Format("2006-01-02")
+		schedules[fajrIdx].Fajr = fajr
+		schedules[sunriseIdx].Sunrise = sunrise
+		schedules[idx].Zuhr = transit
+		schedules[idx].Asr = asr
+		schedules[maghribIdx].Maghrib = maghrib
+		schedules[ishaIdx].Isha = isha
+
+		idx++
 	}
 
-	return prayerTimes, nil
+	// Adjust slice so we only see schedules for this year
+	schedules = schedules[1 : len(schedules)-1]
+
+	// Final check
+	var nAbnormalDays int
+	for i, s := range schedules {
+		// Clean up schedule
+		if !s.Fajr.Before(s.Zuhr) || (!s.Sunrise.IsZero() && !s.Fajr.Before(s.Sunrise)) {
+			s.Fajr = time.Time{}
+		}
+
+		if !s.Sunrise.Before(s.Zuhr) {
+			s.Sunrise = time.Time{}
+		}
+
+		if !s.Maghrib.After(s.Zuhr) {
+			s.Maghrib = time.Time{}
+		}
+
+		if !s.Isha.After(s.Zuhr) || (!s.Maghrib.IsZero() && !s.Isha.After(s.Maghrib)) {
+			s.Isha = time.Time{}
+		}
+
+		if !s.Asr.After(s.Zuhr) || (!s.Maghrib.IsZero() && !s.Asr.Before(s.Maghrib)) {
+			s.Asr = time.Time{}
+		}
+
+		// Check if twilight convention use fixed duration for Maghrib
+		if cfg.TwilightConvention.MaghribDuration != 0 && !s.Maghrib.IsZero() {
+			s.Isha = s.Maghrib.Add(cfg.TwilightConvention.MaghribDuration)
+		}
+
+		// Apply time correction
+		s.Fajr = applyCorrection(s.Fajr, cfg.Corrections.Fajr)
+		s.Sunrise = applyCorrection(s.Sunrise, cfg.Corrections.Sunrise)
+		s.Zuhr = applyCorrection(s.Zuhr, cfg.Corrections.Zuhr)
+		s.Asr = applyCorrection(s.Asr, cfg.Corrections.Asr)
+		s.Maghrib = applyCorrection(s.Maghrib, cfg.Corrections.Maghrib)
+		s.Isha = applyCorrection(s.Isha, cfg.Corrections.Isha)
+
+		// Check if the day is abnormal
+		if s.Fajr.IsZero() || s.Sunrise.IsZero() || s.Maghrib.IsZero() || s.Isha.IsZero() {
+			nAbnormalDays++
+		}
+
+		// Save the adjustment
+		schedules[i] = s
+	}
+
+	// Calculate time for high latitude
+	if nAbnormalDays > 0 {
+		// TODO
+	}
+
+	return schedules, nil
 }
 
-func applyTc(t time.Time, d time.Duration) time.Time {
+func adjustScheduleIdx(schedules []PrayerSchedule, idx int, t, transit time.Time, beforeTransit bool) int {
+	// return idx
+	if !t.IsZero() && !transit.IsZero() {
+		// If event is supposed to occur before transit but in calculation it
+		// happened after, then it's event that chained with tomorrow schedules
+		//
+		// If event is supposed to occur after transit but in calculation it
+		// happened before, then it's event that chained with yesterday schedules
+		if beforeTransit && t.After(transit) {
+			idx++
+		} else if !beforeTransit && t.Before(transit) {
+			idx--
+		}
+	}
+
+	// Fix the index
+	if idx >= len(schedules) {
+		idx = 0
+	} else if idx < 0 {
+		idx = len(schedules) - 1
+	}
+
+	return idx
+}
+
+func applyCorrection(t time.Time, d time.Duration) time.Time {
 	if !t.IsZero() {
 		t = t.Add(d)
 	}
