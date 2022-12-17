@@ -1,21 +1,27 @@
 package prayer
 
 // HighLatConvention is convention for calculating prayer times in area with latitude >45 degrees.
+// Check out https://www.prayertimes.dk/story.html for more detail.
 type HighLatConvention int
 
 const (
-	// LocalRelativeEstimation is convention that created by cooperation between Fiqh Council
-	// of Muslim World League and Islamic Crescents' Observation Project (ICOP). In short, this
-	// convention uses average percentage to calculate Fajr and Isha time for abnormal times.
-	// This convention used for area above 48.6 degrees. For more detail, check out
-	// https://www.astronomycenter.net/latitude.html?l=en
-	LocalRelativeEstimation HighLatConvention = iota
+	// Disabled will not calculate the adjustment for higher latitude and instead will return the
+	// schedule as it is. For area in high or extreme latitude, it might return zero for Fajr,
+	// Sunrise, Maghrib and Isha
+	Disabled HighLatConvention = iota - 1
 
 	// Mecca is convention based on Fatwa from Dar Al Iftah Al Misrriyah number 2806 dated at
 	// 2010-08-08. In this convention, they propose that area with higher latitude when fasting
 	// time is too long (more than 18 hours), to follows the fasting time in Mecca. This convention
 	// is used for area above 48.5 degrees. See https://www.prayertimes.dk/fatawa.html
 	Mecca
+
+	// LocalRelativeEstimation is convention that created by cooperation between Fiqh Council
+	// of Muslim World League and Islamic Crescents' Observation Project (ICOP). In short, this
+	// convention uses average percentage to calculate Fajr and Isha time for abnormal times.
+	// This convention used for area above 48.6 degrees. For more detail, check out
+	// https://www.astronomycenter.net/latitude.html?l=en
+	LocalRelativeEstimation
 
 	// ShariNormalDay is convention proposed by Mohamed Nabeel Tarabishy, Ph.D. In this convention,
 	// they propose that a maximum daylight duration (for fasting) is 17 hours and 36 minutes.

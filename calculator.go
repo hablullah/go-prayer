@@ -208,7 +208,7 @@ func Calculate(cfg Config, year int) ([]PrayerSchedule, error) {
 	}
 
 	// Calculate time for high latitude
-	if nAbnormalDays > 0 {
+	if nAbnormalDays > 0 && cfg.HighLatConvention > Disabled {
 		// TODO
 	}
 
