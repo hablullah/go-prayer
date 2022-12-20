@@ -23,12 +23,6 @@ const (
 	// https://www.astronomycenter.net/latitude.html?l=en
 	LocalRelativeEstimation
 
-	// ShariNormalDay is convention proposed by Mohamed Nabeel Tarabishy, Ph.D. In this convention,
-	// they propose that a maximum daylight duration (for fasting) is 17 hours and 36 minutes.
-	// If the day is "abnormal" then the fasting times is calculated using the schedule for area
-	// with 45 degrees latitude. See https://www.astronomycenter.net/pdf/tarabishyshigh_2014.pdf
-	ShariNormalDay
-
 	// NearestDay is convention where the schedule for "abnormal" days will be taken from the
 	// schedule of the last "normal" day. In this convention, the day considered "abnormal"
 	// when there are no true night. See https://www.islamicity.com/prayertimes/Salat.pdf
@@ -42,6 +36,12 @@ const (
 	// ForcedNearestLatitude is similar with NearestLatitude, except it will be applied every day
 	// and not only on the "abnormal" days.
 	ForcedNearestLatitude
+
+	// ShariNormalDay is convention proposed by Mohamed Nabeel Tarabishy, Ph.D. In this convention,
+	// they propose that a normal day is when the fasting period is between 10h17m and 17h36m. If
+	// the day is "abnormal" then the fasting times is calculated using the schedule for area
+	// with 45 degrees latitude. See https://www.astronomycenter.net/pdf/tarabishyshigh_2014.pdf
+	ShariNormalDay
 
 	// AngleBased is convention that used by some recent prayer time calculators. Let a be the
 	// twilight angle for Isha, and let t = a/60. The period between sunset and sunrise is divided
