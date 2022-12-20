@@ -1,22 +1,21 @@
 package prayer
 
 func calcHighLatNearestDay(schedules []PrayerSchedule) []PrayerSchedule {
-	// Helper function
-	isNormal := func(s PrayerSchedule) bool {
-		return !s.Fajr.IsZero() && !s.Sunrise.IsZero() && !s.Asr.IsZero() &&
-			!s.Maghrib.IsZero() && !s.Isha.IsZero()
-	}
-
 	// Fetch the first last normal day
 	var lastNormalIdx int
 	var lastNormalSchedule PrayerSchedule
 
-	if isNormal(schedules[0]) {
-		lastNormalIdx = 0
-		lastNormalSchedule = schedules[0]
+	if isScheduleNormal(schedules[0]) {
+		for i := 1; i < len(schedules); i++ {
+			if !isScheduleNormal(schedules[i]) {
+				lastNormalIdx = i - 1
+				lastNormalSchedule = schedules[i-1]
+				break
+			}
+		}
 	} else {
 		for i := len(schedules) - 1; i >= 0; i-- {
-			if isNormal(schedules[i]) {
+			if isScheduleNormal(schedules[i]) {
 				lastNormalIdx = i
 				lastNormalSchedule = schedules[i]
 				break
@@ -25,16 +24,23 @@ func calcHighLatNearestDay(schedules []PrayerSchedule) []PrayerSchedule {
 	}
 
 	// Fix the schedule starting from the last normal idx
-	for i := lastNormalIdx + 1; i != lastNormalIdx; i++ {
+	i := lastNormalIdx + 1
+	for {
 		if i >= len(schedules) {
 			i = 0
 		}
 
-		if s := schedules[i]; isNormal(s) {
+		if i == lastNormalIdx {
+			break
+		}
+
+		if s := schedules[i]; isScheduleNormal(s) {
 			lastNormalSchedule = s
 		} else {
 			schedules[i] = lastNormalSchedule
 		}
+
+		i++
 	}
 
 	return schedules

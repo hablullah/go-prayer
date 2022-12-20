@@ -114,7 +114,7 @@ func calcNormal(cfg Config, year int) ([]PrayerSchedule, int) {
 		}
 
 		// Check if the day is abnormal
-		if s.Fajr.IsZero() || s.Sunrise.IsZero() || s.Asr.IsZero() || s.Maghrib.IsZero() || s.Isha.IsZero() {
+		if !isScheduleNormal(s) {
 			nAbnormal++
 		}
 
@@ -123,6 +123,11 @@ func calcNormal(cfg Config, year int) ([]PrayerSchedule, int) {
 	}
 
 	return schedules, nAbnormal
+}
+
+func isScheduleNormal(s PrayerSchedule) bool {
+	return !s.Fajr.IsZero() && !s.Sunrise.IsZero() && !s.Asr.IsZero() &&
+		!s.Maghrib.IsZero() && !s.Isha.IsZero()
 }
 
 func adjustScheduleIdx(schedules []PrayerSchedule, idx int, t, transit time.Time, beforeTransit bool) int {
