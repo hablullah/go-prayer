@@ -24,22 +24,20 @@ func calcHighLatAngleBased(cfg Config, schedules []PrayerSchedule) []PrayerSched
 
 	// Apply schedules
 	for i, s := range schedules {
-		// Angle based require Sunrise and Maghrib
-		if s.Sunrise.IsZero() || s.Maghrib.IsZero() {
-			continue
+		// Angle based require Sunrise and Maghrib, and only done if Fajr or Isha missing
+		if !s.Sunrise.IsZero() && !s.Maghrib.IsZero() && (s.Fajr.IsZero() || s.Isha.IsZero()) {
+			// Calculate night duration
+			dayDuration := s.Maghrib.Sub(s.Sunrise).Seconds()
+			nightDuration := float64(24*60*60) - dayDuration
+
+			// Calculate Fajr time
+			fajrDuration := time.Duration(math.Round(nightDuration/60*fajrAngle)) * time.Second
+			schedules[i].Fajr = s.Sunrise.Add(-fajrDuration)
+
+			// Calculate Isha time
+			ishaDuration := time.Duration(math.Round(nightDuration/60*ishaAngle)) * time.Second
+			schedules[i].Isha = s.Maghrib.Add(ishaDuration)
 		}
-
-		// Calculate night duration
-		dayDuration := s.Maghrib.Sub(s.Sunrise).Seconds()
-		nightDuration := float64(24*60*60) - dayDuration
-
-		// Calculate Fajr time
-		fajrDuration := time.Duration(math.Round(nightDuration/60*fajrAngle)) * time.Second
-		schedules[i].Fajr = s.Sunrise.Add(-fajrDuration)
-
-		// Calculate Isha time
-		ishaDuration := time.Duration(math.Round(nightDuration/60*ishaAngle)) * time.Second
-		schedules[i].Isha = s.Maghrib.Add(ishaDuration)
 	}
 
 	return schedules

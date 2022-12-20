@@ -3,7 +3,7 @@ package prayer
 func calcHighLatNearestDay(schedules []PrayerSchedule) []PrayerSchedule {
 	// Helper function
 	isNormal := func(s PrayerSchedule) bool {
-		return !s.Fajr.IsZero() && !s.Sunrise.IsZero() &&
+		return !s.Fajr.IsZero() && !s.Sunrise.IsZero() && !s.Asr.IsZero() &&
 			!s.Maghrib.IsZero() && !s.Isha.IsZero()
 	}
 
@@ -31,7 +31,6 @@ func calcHighLatNearestDay(schedules []PrayerSchedule) []PrayerSchedule {
 		}
 
 		if s := schedules[i]; isNormal(s) {
-			lastNormalIdx = i
 			lastNormalSchedule = s
 		} else {
 			schedules[i] = lastNormalSchedule

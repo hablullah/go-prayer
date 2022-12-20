@@ -29,7 +29,7 @@ func calcHighLatShariNormalDay(cfg Config, year int, schedules []PrayerSchedule)
 	// Apply schedules for the abnormal days
 	for i, s := range schedules {
 		fastingDuration := s.Maghrib.Sub(s.Fajr)
-		if s.Fajr.IsZero() || s.Sunrise.IsZero() ||
+		if s.Fajr.IsZero() || s.Sunrise.IsZero() || s.Asr.IsZero() ||
 			s.Maghrib.IsZero() || s.Isha.IsZero() ||
 			fastingDuration < fastingMin ||
 			fastingDuration > fastingMax {

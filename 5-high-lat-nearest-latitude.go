@@ -21,7 +21,7 @@ func calcHighLatNearestLatitude(cfg Config, year int, schedules []PrayerSchedule
 
 	// Apply schedules for the abnormal days
 	for i, s := range schedules {
-		if s.Fajr.IsZero() || s.Sunrise.IsZero() ||
+		if s.Fajr.IsZero() || s.Sunrise.IsZero() || s.Asr.IsZero() ||
 			s.Maghrib.IsZero() || s.Isha.IsZero() {
 			schedules[i] = newSchedules[i]
 		}

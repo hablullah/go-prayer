@@ -114,7 +114,7 @@ func calcNormal(cfg Config, year int) ([]PrayerSchedule, int) {
 		}
 
 		// Check if the day is abnormal
-		if s.Fajr.IsZero() || s.Sunrise.IsZero() || s.Maghrib.IsZero() || s.Isha.IsZero() {
+		if s.Fajr.IsZero() || s.Sunrise.IsZero() || s.Asr.IsZero() || s.Maghrib.IsZero() || s.Isha.IsZero() {
 			nAbnormal++
 		}
 
