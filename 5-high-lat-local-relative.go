@@ -67,9 +67,9 @@ func calcLocalRelativeEstimation(cfg Config, year int, schedules []PrayerSchedul
 		}
 	}
 
-	// Make sure the new Sunrise and Sunset is not more than 5 minutes apart
-	sunriseTimes = interpolateTimes(year, sunriseTimes, emptySunriseIndexGroups, 5*time.Minute)
-	maghribTimes = interpolateTimes(year, maghribTimes, emptyMaghribIndexGroups, -5*time.Minute)
+	maxDiff := 5 * time.Minute
+	sunriseTimes = interpolateEmptyTimes(year, sunriseTimes, emptySunriseIndexGroups, maxDiff)
+	maghribTimes = interpolateEmptyTimes(year, maghribTimes, emptyMaghribIndexGroups, maxDiff)
 
 	// Fix Fajr and Isha times
 	for i := range schedules {
@@ -88,8 +88,8 @@ func calcLocalRelativeEstimation(cfg Config, year int, schedules []PrayerSchedul
 		}
 	}
 
-	fajrTimes = interpolateTimes(year, fajrTimes, emptyFajrIndexGroups, 5*time.Minute)
-	ishaTimes = interpolateTimes(year, ishaTimes, emptyIshaIndexGroups, -5*time.Minute)
+	fajrTimes = interpolateEmptyTimes(year, fajrTimes, emptyFajrIndexGroups, maxDiff)
+	ishaTimes = interpolateEmptyTimes(year, ishaTimes, emptyIshaIndexGroups, maxDiff)
 
 	// Apply the corrected times
 	for i, s := range schedules {
@@ -103,113 +103,45 @@ func calcLocalRelativeEstimation(cfg Config, year int, schedules []PrayerSchedul
 	return schedules
 }
 
-func groupEmptyTimes(times []time.Time) [][]int {
-	// Group the empty times
-	lastIdx := -2
-	var currentGroup []int
-	var indexesGroups [][]int
-	for i, t := range times {
-		if t.IsZero() {
-			if i > lastIdx+1 && len(currentGroup) > 0 {
-				indexesGroups = append(indexesGroups, currentGroup)
-				currentGroup = []int{i}
-			} else {
-				currentGroup = append(currentGroup, i)
-			}
-			lastIdx = i
-		}
-	}
-
-	// If:
-	// 1) the final group not empty,
-	// 2) the final group end with the last index of `times`
-	// 3) the first group start with 0
-	// then merge the final group with the first one
-	if len(currentGroup) > 0 {
-		firstOfFirstGroup := -1
-		if len(indexesGroups) > 0 && len(indexesGroups[0]) > 0 {
-			firstOfFirstGroup = indexesGroups[0][0]
-		}
-
-		lastOfFinalGroup := currentGroup[len(currentGroup)-1]
-		if firstOfFirstGroup == 0 && lastOfFinalGroup == len(times)-1 {
-			indexesGroups[0] = append(currentGroup, indexesGroups[0]...)
-			currentGroup = []int{} // empty the current group
-		}
-	}
-
-	// If current group is not empty, save
-	if len(currentGroup) > 0 {
-		indexesGroups = append(indexesGroups, currentGroup)
-	}
-
-	return indexesGroups
-}
-
-func interpolateTimes(year int, times []time.Time, emptyIndexGroups [][]int, step time.Duration) []time.Time {
+func interpolateEmptyTimes(year int, times []time.Time, emptyIndexGroups [][]int, step time.Duration) []time.Time {
 	for _, emptyIndexes := range emptyIndexGroups {
-		// Get min, max, mid time
-		half := len(emptyIndexes) / 2
-
 		// Split indexes into two
+		half := len(emptyIndexes) / 2
 		firstHalf := emptyIndexes[:half+1]
 		lastHalf := emptyIndexes[half+1:]
 
 		// Fix the first half
 		for _, idx := range firstHalf {
-			// Get time from previous day, then set it date to today
-			today := times[idx]
+			// Get time from previous day, then set it date to transit
 			prevDay := times[getRealIndex(idx-1, times)]
 			prevDay = prevDay.AddDate(0, 0, 1)
-
-			// Make sure the year for previous day is correct
-			prevDay = time.Date(year, prevDay.Month(), prevDay.Day(),
+			prevDay = time.Date(
+				year, prevDay.Month(), prevDay.Day(),
 				prevDay.Hour(), prevDay.Minute(), prevDay.Second(),
 				prevDay.Nanosecond(), prevDay.Location())
 
 			// Adjust the time
-			adjusted := adjustTime(today, prevDay, step)
-			times[idx] = adjusted
+			today := times[idx]
+			times[idx] = limitTimeDiff(today, prevDay, step, true)
 		}
 
 		// Fix the last half
 		for i := len(lastHalf) - 1; i >= 0; i-- {
 			idx := lastHalf[i]
-			today := times[idx]
 
-			// Get time from the next day, then set it date to today
+			// Get time from the next day, then set it date to transit
 			nextDay := times[getRealIndex(idx+1, times)]
 			nextDay = nextDay.AddDate(0, 0, -1)
-
-			// Make sure the year for next day is correct
-			nextDay = time.Date(year, nextDay.Month(), nextDay.Day(),
+			nextDay = time.Date(
+				year, nextDay.Month(), nextDay.Day(),
 				nextDay.Hour(), nextDay.Minute(), nextDay.Second(),
 				nextDay.Nanosecond(), nextDay.Location())
 
 			// Adjust the time
-			adjusted := adjustTime(today, nextDay, step)
-			times[idx] = adjusted
+			today := times[idx]
+			times[idx] = limitTimeDiff(today, nextDay, step, false)
 		}
 	}
 
 	return times
-}
-
-func adjustTime(curent, reference time.Time, step time.Duration) time.Time {
-	diff := curent.Sub(reference).Abs()
-	if diff > step.Abs() {
-		return reference.Add(step)
-	} else {
-		return curent
-	}
-}
-
-func getRealIndex(idx int, list []time.Time) int {
-	if idx < 0 {
-		return len(list) - 1
-	} else if idx > len(list)-1 {
-		return 0
-	} else {
-		return idx
-	}
 }

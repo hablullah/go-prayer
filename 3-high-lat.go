@@ -11,10 +11,15 @@ const (
 	Disabled HighLatConvention = iota - 1
 
 	// Mecca is convention based on Fatwa from Dar Al Iftah Al Misrriyah number 2806 dated at
-	// 2010-08-08. In this convention, they propose that area with higher latitude when fasting
-	// time is too long (more than 18 hours), to follows the fasting time in Mecca. This convention
-	// is used for area above 48.5 degrees. See https://www.prayertimes.dk/fatawa.html
+	// 2010-08-08. In this convention, they propose that area with higher latitude to follows the
+	// schedule in Mecca when abnormal days occured. In this convention, the day is considered
+	// "abnormal" when there are no true night, the fasting time is more than 18 hours, or the
+	// fasting time is less than 4 hours. See https://www.prayertimes.dk/fatawa.html
 	Mecca
+
+	// ForceMecca is similar with Mecca, except it will be applied every day and not only on
+	// the "abnormal" days.
+	ForceMecca
 
 	// LocalRelativeEstimation is convention that created by cooperation between Fiqh Council
 	// of Muslim World League and Islamic Crescents' Observation Project (ICOP). In short, this
@@ -33,9 +38,9 @@ const (
 	// "abnormal" when there are no true night. See https://www.islamicity.com/prayertimes/Salat.pdf
 	NearestLatitude
 
-	// ForcedNearestLatitude is similar with NearestLatitude, except it will be applied every day
+	// ForceNearestLatitude is similar with NearestLatitude, except it will be applied every day
 	// and not only on the "abnormal" days.
-	ForcedNearestLatitude
+	ForceNearestLatitude
 
 	// ShariNormalDay is convention proposed by Mohamed Nabeel Tarabishy, Ph.D. In this convention,
 	// they propose that a normal day is when the fasting period is between 10h17m and 17h36m. If

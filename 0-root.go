@@ -91,13 +91,15 @@ func Calculate(cfg Config, year int) ([]PrayerSchedule, error) {
 		switch cfg.HighLatConvention {
 		case Mecca:
 			schedules = calcHighLatMecca(cfg, year, schedules)
+		case ForceMecca:
+			schedules = calcHighLatForceMecca(cfg, year, schedules)
 		case LocalRelativeEstimation:
 			schedules = calcLocalRelativeEstimation(cfg, year, schedules)
 		case NearestDay:
 			schedules = calcHighLatNearestDay(schedules)
 		case NearestLatitude:
 			schedules = calcHighLatNearestLatitude(cfg, year, schedules)
-		case ForcedNearestLatitude:
+		case ForceNearestLatitude:
 			schedules = calcHighLatForceNearestLatitude(cfg, year)
 		case ShariNormalDay:
 			schedules = calcHighLatShariNormalDay(cfg, year, schedules)
