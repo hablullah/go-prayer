@@ -1,7 +1,6 @@
 package prayer
 
 import (
-	"math"
 	"time"
 )
 
@@ -29,6 +28,10 @@ type PrayerSchedule struct {
 
 	// Isha is the time when darkness falls and after this point the sky is no longer illuminated (dusk).
 	Isha time.Time
+
+	// IsNormal specify whether the day have a normal day night period or not. It will be false in
+	// area with higher latitude, when Sun never rise or set in extreme periods.
+	IsNormal bool
 }
 
 // ScheduleCorrections is correction for each prayer time.
@@ -86,8 +89,11 @@ func Calculate(cfg Config, year int) ([]PrayerSchedule, error) {
 	// Calculate the schedules
 	schedules, nAbnormal := calcNormal(cfg, year)
 
+	// Fill the empty times in schedule
+	schedules = fixEmptyTimes(schedules)
+
 	// Apply high latitude convention
-	if math.Abs(cfg.Latitude) > 45 || nAbnormal > 0 {
+	if nAbnormal > 0 {
 		switch cfg.HighLatConvention {
 		case Mecca:
 			schedules = calcHighLatMecca(cfg, year, schedules)

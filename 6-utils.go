@@ -85,3 +85,8 @@ func getRealIndex(idx int, list []time.Time) int {
 		return idx
 	}
 }
+
+func isScheduleNormal(s PrayerSchedule) bool {
+	return !s.Fajr.IsZero() && !s.Sunrise.IsZero() && !s.Asr.IsZero() &&
+		!s.Maghrib.IsZero() && !s.Isha.IsZero()
+}

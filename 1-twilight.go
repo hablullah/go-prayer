@@ -28,11 +28,11 @@ var (
 
 	// UmmAlQura is calculation method from Umm al-Qura University in Makkah which used in Saudi Arabia.
 	// Fajr at 18.5° and Isha fixed at 90 minutes after Maghrib.
-	UmmAlQura = tc(18.5, 0, time.Minute*90)
+	UmmAlQura = tc(18.5, 18, time.Minute*90)
 
 	// Gulf is calculation method that often used by countries in Gulf region like UAE and Kuwait.
 	// Fajr at 19.5° and Isha fixed at 90 minutes after Maghrib.
-	Gulf = tc(19.5, 0, time.Minute*90)
+	Gulf = tc(19.5, 18, time.Minute*90)
 
 	// Algerian is calculation method from Algerian Ministry of Religious Affairs and Wakfs.
 	// Fajr at 18° and Isha at 17°.

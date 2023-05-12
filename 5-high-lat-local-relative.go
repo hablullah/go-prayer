@@ -68,8 +68,8 @@ func calcLocalRelativeEstimation(cfg Config, year int, schedules []PrayerSchedul
 	}
 
 	maxDiff := 5 * time.Minute
-	sunriseTimes = interpolateEmptyTimes(year, sunriseTimes, emptySunriseIndexGroups, maxDiff)
-	maghribTimes = interpolateEmptyTimes(year, maghribTimes, emptyMaghribIndexGroups, maxDiff)
+	sunriseTimes = interpolateHighLatEmptyTimes(year, sunriseTimes, emptySunriseIndexGroups, maxDiff)
+	maghribTimes = interpolateHighLatEmptyTimes(year, maghribTimes, emptyMaghribIndexGroups, maxDiff)
 
 	// Fix Fajr and Isha times
 	for i := range schedules {
@@ -88,8 +88,8 @@ func calcLocalRelativeEstimation(cfg Config, year int, schedules []PrayerSchedul
 		}
 	}
 
-	fajrTimes = interpolateEmptyTimes(year, fajrTimes, emptyFajrIndexGroups, maxDiff)
-	ishaTimes = interpolateEmptyTimes(year, ishaTimes, emptyIshaIndexGroups, maxDiff)
+	fajrTimes = interpolateHighLatEmptyTimes(year, fajrTimes, emptyFajrIndexGroups, maxDiff)
+	ishaTimes = interpolateHighLatEmptyTimes(year, ishaTimes, emptyIshaIndexGroups, maxDiff)
 
 	// Apply the corrected times
 	for i, s := range schedules {
@@ -103,7 +103,7 @@ func calcLocalRelativeEstimation(cfg Config, year int, schedules []PrayerSchedul
 	return schedules
 }
 
-func interpolateEmptyTimes(year int, times []time.Time, emptyIndexGroups [][]int, step time.Duration) []time.Time {
+func interpolateHighLatEmptyTimes(year int, times []time.Time, emptyIndexGroups [][]int, step time.Duration) []time.Time {
 	for _, emptyIndexes := range emptyIndexGroups {
 		// Split indexes into two
 		half := len(emptyIndexes) / 2
