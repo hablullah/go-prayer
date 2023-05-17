@@ -13,8 +13,8 @@ const (
 	// Mecca is convention based on Fatwa from Dar Al Iftah Al Misrriyah number 2806 dated at
 	// 2010-08-08. In this convention, they propose that area with higher latitude to follows the
 	// schedule in Mecca when abnormal days occured. In this convention, the day is considered
-	// "abnormal" when there are no true night, the fasting time is more than 18 hours, or the
-	// fasting time is less than 4 hours. See https://www.prayertimes.dk/fatawa.html
+	// "abnormal" when there are no true night, or the day length is less than 4 hours. See
+	// https://www.prayertimes.dk/fatawa.html
 	Mecca
 
 	// ForceMecca is similar with Mecca, except it will be applied every day and not only on
