@@ -89,9 +89,6 @@ func Calculate(cfg Config, year int) ([]PrayerSchedule, error) {
 	// Calculate the schedules
 	schedules, nAbnormal := calcNormal(cfg, year)
 
-	// Fill the empty times in schedule
-	schedules = fixEmptyTimes(schedules)
-
 	// Apply high latitude convention
 	if nAbnormal > 0 {
 		switch cfg.HighLatConvention {

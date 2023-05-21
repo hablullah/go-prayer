@@ -25,7 +25,7 @@ func sliceRealIdx[T any](arr []T, idx int) int {
 }
 
 func sliceAt[T any](arr []T, idx int) T {
-	realIdx := sliceRealIdx[T](arr, idx)
+	realIdx := sliceRealIdx(arr, idx)
 	return arr[realIdx]
 }
 

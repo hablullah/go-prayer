@@ -90,11 +90,11 @@ func extractEmptyTimes(schedules []PrayerSchedule, times []time.Time) []EmptyRan
 	lastEmptyIdx := -2
 	var ranges []EmptyRange
 	var currentRange EmptyRange
-	for i, s := range schedules {
+	for i := range schedules {
 		t := times[i]
 
-		// If schedule is abnormal or time not empty, skip
-		if !s.IsNormal || !t.IsZero() {
+		// If time not empty, skip
+		if !t.IsZero() {
 			continue
 		}
 
