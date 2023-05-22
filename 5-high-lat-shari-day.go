@@ -2,11 +2,6 @@ package prayer
 
 import "time"
 
-var (
-	fastingMin = 10*time.Hour + 17*time.Minute
-	fastingMax = 17*time.Hour + 36*time.Minute
-)
-
 func calcHighLatShariNormalDay(cfg Config, year int, schedules []PrayerSchedule) []PrayerSchedule {
 	// Get the nearest latitude
 	latitude := cfg.Latitude
@@ -24,16 +19,34 @@ func calcHighLatShariNormalDay(cfg Config, year int, schedules []PrayerSchedule)
 		TwilightConvention: cfg.TwilightConvention,
 		AsrConvention:      cfg.AsrConvention,
 		HighLatConvention:  Disabled}
-	newSchedules, _ := calcNormal(newCfg, year)
+	nearestSchedules, _ := calcNormal(newCfg, year)
 
-	// Apply schedules for the abnormal days
+	// Apply schedules for the abnormal days using schedules from nearest latitude
+	// with transit as common point.
+	minFastingDuration := 10*time.Hour + 17*time.Minute
+	maxFastingDuration := 17*time.Hour + 36*time.Minute
 	for i, s := range schedules {
+		// If day is normal, just continue
 		fastingDuration := s.Maghrib.Sub(s.Fajr)
-		if !isScheduleNormal(s) ||
-			fastingDuration < fastingMin ||
-			fastingDuration > fastingMax {
-			schedules[i] = newSchedules[i]
+		if s.IsNormal && fastingDuration >= minFastingDuration && fastingDuration <= maxFastingDuration {
+			continue
 		}
+
+		// Calculate duration from schedule for nearest latitude
+		ns := nearestSchedules[i]
+		nsFajrTransit := ns.Zuhr.Sub(ns.Fajr)
+		nsRiseTransit := ns.Zuhr.Sub(ns.Sunrise)
+		nsTransitAsr := ns.Asr.Sub(ns.Zuhr)
+		nsTransitMaghrib := ns.Maghrib.Sub(ns.Zuhr)
+		nsTransitIsha := ns.Isha.Sub(ns.Zuhr)
+
+		// Apply durations
+		s.Fajr = s.Zuhr.Add(-nsFajrTransit)
+		s.Sunrise = s.Zuhr.Add(-nsRiseTransit)
+		s.Asr = s.Zuhr.Add(nsTransitAsr)
+		s.Maghrib = s.Zuhr.Add(nsTransitMaghrib)
+		s.Isha = s.Zuhr.Add(nsTransitIsha)
+		schedules[i] = s
 	}
 
 	return schedules
