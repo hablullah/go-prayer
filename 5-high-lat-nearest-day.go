@@ -1,46 +1,22 @@
 package prayer
 
 func calcHighLatNearestDay(schedules []PrayerSchedule) []PrayerSchedule {
-	// Fetch the first last normal day
-	var lastNormalIdx int
-	var lastNormalSchedule PrayerSchedule
+	abnormalSummer, abnormalWinter := extractAbnormalSchedules(schedules)
 
-	if isScheduleNormal(schedules[0]) {
-		for i := 1; i < len(schedules); i++ {
-			if !isScheduleNormal(schedules[i]) {
-				lastNormalIdx = i - 1
-				lastNormalSchedule = schedules[i-1]
-				break
-			}
-		}
-	} else {
-		for i := len(schedules) - 1; i >= 0; i-- {
-			if isScheduleNormal(schedules[i]) {
-				lastNormalIdx = i
-				lastNormalSchedule = schedules[i]
-				break
-			}
-		}
-	}
-
-	// Fix the schedule starting from the last normal idx
-	i := lastNormalIdx + 1
-	for {
-		if i >= len(schedules) {
-			i = 0
+	for _, as := range []AbnormalRange{abnormalSummer, abnormalWinter} {
+		// If this abnormal period is empty, skip
+		if as.IsEmpty() {
+			continue
 		}
 
-		if i == lastNormalIdx {
-			break
-		}
+		// Get the last normal schedule
+		abnormalIdxStart := as.Indexes[0]
+		lastNormalSchedule := sliceAt(schedules, abnormalIdxStart-1)
 
-		if s := schedules[i]; isScheduleNormal(s) {
-			lastNormalSchedule = s
-		} else {
-			schedules[i] = lastNormalSchedule
+		// Use the last normal schedule for the entire abnormal period
+		for _, idx := range as.Indexes {
+			schedules[idx] = lastNormalSchedule
 		}
-
-		i++
 	}
 
 	return schedules
