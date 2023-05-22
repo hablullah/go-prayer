@@ -1,27 +1,31 @@
 package prayer
 
-import "time"
+import (
+	"time"
+)
 
 func calcLocalRelativeEstimation(cfg Config, year int, schedules []PrayerSchedule) []PrayerSchedule {
-	// Split prayer times and calculate percentage
-	var nDaySample, nFajrSample, nIshaSample int
-	var sumDayPercents, sumFajrPercents, sumIshaPercents float64
-	var fajrTimes, sunriseTimes, maghribTimes, ishaTimes []time.Time
+	var (
+		nFajrSample     int
+		nIshaSample     int
+		sumFajrPercents float64
+		sumIshaPercents float64
+	)
 
 	for _, s := range schedules {
-		// Split prayer times
-		fajrTimes = append(fajrTimes, s.Fajr)
-		sunriseTimes = append(sunriseTimes, s.Sunrise)
-		maghribTimes = append(maghribTimes, s.Maghrib)
-		ishaTimes = append(ishaTimes, s.Isha)
+		// This conventions only works if daytime exists (in other words, sunrise
+		// and Maghrib must exist). So if there are days where those time don't
+		// exist, stop and just return the schedule as it is.
+		// TODO: maybe put some warning log later.
+		if s.Sunrise.IsZero() || s.Maghrib.IsZero() {
+			return schedules
+		}
 
 		// Calculate percentage in normal days
-		if !s.Sunrise.IsZero() && !s.Maghrib.IsZero() {
-			// Calculate day percentage
+		if s.IsNormal {
+			// Calculate day and night
 			dayDuration := s.Maghrib.Sub(s.Sunrise).Seconds()
-			nightDuration := float64(24*60*60) - dayDuration
-			sumDayPercents += dayDuration / (24 * 60 * 60)
-			nDaySample++
+			nightDuration := 24*60*60 - dayDuration
 
 			// Calculate Fajr percentage
 			if !s.Fajr.IsZero() {
@@ -40,108 +44,128 @@ func calcLocalRelativeEstimation(cfg Config, year int, schedules []PrayerSchedul
 	}
 
 	// Calculate average percentage
-	avgDayPercents := sumDayPercents / float64(nDaySample)
 	avgFajrPercents := sumFajrPercents / float64(nFajrSample)
 	avgIshaPercents := sumIshaPercents / float64(nIshaSample)
-	avgDayDuration := time.Second * time.Duration(avgDayPercents*24*60*60)
 
-	// Group empty time indexes
-	emptyFajrIndexGroups := groupEmptyTimes(fajrTimes)
-	emptySunriseIndexGroups := groupEmptyTimes(sunriseTimes)
-	emptyMaghribIndexGroups := groupEmptyTimes(maghribTimes)
-	emptyIshaIndexGroups := groupEmptyTimes(ishaTimes)
+	// Extract abnormal schedules
+	abnormalSummer, abnormalWinter := extractAbnormalSchedules(schedules)
 
-	// Fix Sunrise and Maghrib time
-	for i := range schedules {
-		sunrise, maghrib := sunriseTimes[i], maghribTimes[i]
+	// Fix Fajr and Isha times in abnormal days
+	for _, as := range []AbnormalRange{abnormalSummer, abnormalWinter} {
+		for _, i := range as.Indexes {
+			s := schedules[i]
+			dayDuration := s.Maghrib.Sub(s.Sunrise).Seconds()
+			nightDuration := 24*60*60 - dayDuration
 
-		switch {
-		case !sunrise.IsZero() && maghrib.IsZero():
-			maghribTimes[i] = sunrise.Add(avgDayDuration)
-		case sunrise.IsZero() && !maghrib.IsZero():
-			sunriseTimes[i] = maghrib.Add(-avgDayDuration)
-		case sunrise.IsZero() && maghrib.IsZero():
-			noon := schedules[i].Zuhr
-			sunriseTimes[i] = noon.Add(-(avgDayDuration / 2))
-			maghribTimes[i] = sunrise.Add(avgDayDuration)
+			if !s.IsNormal {
+				fajrDuration := time.Duration(nightDuration*avgFajrPercents) * time.Second
+				schedules[i].Fajr = s.Sunrise.Add(-fajrDuration)
+
+				ishaDuration := time.Duration(nightDuration*avgIshaPercents) * time.Second
+				schedules[i].Isha = s.Maghrib.Add(ishaDuration)
+			}
 		}
 	}
 
-	maxDiff := 5 * time.Minute
-	sunriseTimes = interpolateHighLatEmptyTimes(year, sunriseTimes, emptySunriseIndexGroups, maxDiff)
-	maghribTimes = interpolateHighLatEmptyTimes(year, maghribTimes, emptyMaghribIndexGroups, maxDiff)
+	schedules = applyLocalRelativeTransition(schedules, abnormalSummer)
+	schedules = applyLocalRelativeTransition(schedules, abnormalWinter)
+	return schedules
+}
 
-	// Fix Fajr and Isha times
-	for i := range schedules {
-		sunrise, maghrib := sunriseTimes[i], maghribTimes[i]
-		dayDuration := maghrib.Sub(sunrise).Seconds()
-		nightDuration := float64(24*60*60) - dayDuration
+func applyLocalRelativeTransition(schedules []PrayerSchedule, abnormalPeriod AbnormalRange) []PrayerSchedule {
+	// If there are no abnormality, return as it is
+	if abnormalPeriod.IsEmpty() {
+		return schedules
+	}
 
-		if fajr := fajrTimes[i]; fajr.IsZero() {
-			fajrDuration := time.Duration(nightDuration*avgFajrPercents) * time.Second
-			fajrTimes[i] = sunrise.Add(-fajrDuration)
+	// Split the abnormal period into two
+	nAbnormalDays := len(abnormalPeriod.Indexes)
+	maxTransitionDays := nAbnormalDays / 2
+	firstHalf := abnormalPeriod.Indexes[:maxTransitionDays]
+	secondHalf := abnormalPeriod.Indexes[nAbnormalDays-maxTransitionDays:]
+
+	// Fix the time in first half
+	for _, idx := range firstHalf {
+		today := sliceAt(schedules, idx)
+		yesterday := sliceAt(schedules, idx-1)
+
+		// If idx is zero, it means today is the first day of the year.
+		// Therefore, yesterday is occured last year.
+		if idx == 0 {
+			yesterday.Fajr = yesterday.Fajr.AddDate(-1, 0, 0)
+			yesterday.Isha = yesterday.Isha.AddDate(-1, 0, 0)
 		}
 
-		if isha := ishaTimes[i]; isha.IsZero() {
-			ishaDuration := time.Duration(nightDuration*avgIshaPercents) * time.Second
-			ishaTimes[i] = maghrib.Add(ishaDuration)
+		var fajrChanged, ishaChanged bool
+		schedules[idx].Fajr, fajrChanged = applyLocalRelativeTransitionTime(yesterday.Fajr, today.Fajr)
+		schedules[idx].Isha, ishaChanged = applyLocalRelativeTransitionTime(yesterday.Isha, today.Isha)
+		if !fajrChanged && !ishaChanged {
+			break
 		}
 	}
 
-	fajrTimes = interpolateHighLatEmptyTimes(year, fajrTimes, emptyFajrIndexGroups, maxDiff)
-	ishaTimes = interpolateHighLatEmptyTimes(year, ishaTimes, emptyIshaIndexGroups, maxDiff)
+	// Fix the time in second half, do it backward
+	for i := len(secondHalf) - 1; i >= 0; i-- {
+		idx := secondHalf[i]
+		today := sliceAt(schedules, idx)
+		tomorrow := sliceAt(schedules, idx+1)
 
-	// Apply the corrected times
-	for i, s := range schedules {
-		s.Fajr = fajrTimes[i]
-		s.Sunrise = sunriseTimes[i]
-		s.Maghrib = maghribTimes[i]
-		s.Isha = ishaTimes[i]
-		schedules[i] = s
+		// If idx is last, it means today is the last day of the year.
+		// Therefore, tomorrow will occur next year.
+		if idx == len(schedules)-1 {
+			tomorrow.Fajr = tomorrow.Fajr.AddDate(1, 0, 0)
+			tomorrow.Isha = tomorrow.Isha.AddDate(1, 0, 0)
+		}
+
+		var fajrChanged, ishaChanged bool
+		schedules[idx].Fajr, fajrChanged = applyLocalRelativeTransitionTime(tomorrow.Fajr, today.Fajr)
+		schedules[idx].Isha, ishaChanged = applyLocalRelativeTransitionTime(tomorrow.Isha, today.Isha)
+		if !fajrChanged && !ishaChanged {
+			break
+		}
 	}
 
 	return schedules
 }
 
-func interpolateHighLatEmptyTimes(year int, times []time.Time, emptyIndexGroups [][]int, step time.Duration) []time.Time {
-	for _, emptyIndexes := range emptyIndexGroups {
-		// Split indexes into two
-		half := len(emptyIndexes) / 2
-		firstHalf := emptyIndexes[:half+1]
-		lastHalf := emptyIndexes[half+1:]
-
-		// Fix the first half
-		for _, idx := range firstHalf {
-			// Get time from previous day, then set it date to transit
-			prevDay := times[getRealIndex(idx-1, times)]
-			prevDay = prevDay.AddDate(0, 0, 1)
-			prevDay = time.Date(
-				year, prevDay.Month(), prevDay.Day(),
-				prevDay.Hour(), prevDay.Minute(), prevDay.Second(),
-				prevDay.Nanosecond(), prevDay.Location())
-
-			// Adjust the time
-			today := times[idx]
-			times[idx] = limitTimeDiff(today, prevDay, step, true)
-		}
-
-		// Fix the last half
-		for i := len(lastHalf) - 1; i >= 0; i-- {
-			idx := lastHalf[i]
-
-			// Get time from the next day, then set it date to transit
-			nextDay := times[getRealIndex(idx+1, times)]
-			nextDay = nextDay.AddDate(0, 0, -1)
-			nextDay = time.Date(
-				year, nextDay.Month(), nextDay.Day(),
-				nextDay.Hour(), nextDay.Minute(), nextDay.Second(),
-				nextDay.Nanosecond(), nextDay.Location())
-
-			// Adjust the time
-			today := times[idx]
-			times[idx] = limitTimeDiff(today, nextDay, step, false)
-		}
+func applyLocalRelativeTransitionTime(reference, today time.Time) (time.Time, bool) {
+	// Calculate diff between today and reference
+	var diff time.Duration
+	var referenceIsForward bool
+	if today.After(reference) {
+		diff = today.Sub(reference)
+		referenceIsForward = false
+	} else {
+		diff = reference.Sub(today)
+		referenceIsForward = true
 	}
 
-	return times
+	// Limit the difference
+	maxDiff := 24*time.Hour + 5*time.Minute
+	minDiff := 24*time.Hour - 5*time.Minute
+
+	if diff > maxDiff {
+		diff = maxDiff
+	} else if diff < minDiff {
+		diff = minDiff
+	} else {
+		return today, false // the diff is within limit, nothing to change
+	}
+
+	// Adjust the time
+	var newTime time.Time
+	if referenceIsForward {
+		newTime = reference.Add(-diff)
+	} else {
+		newTime = reference.Add(diff)
+	}
+
+	// Fix the year
+	if todayYear := today.Year(); newTime.Year() != todayYear {
+		newTime = time.Date(todayYear, newTime.Month(), newTime.Day(),
+			newTime.Hour(), newTime.Minute(), newTime.Second(), newTime.Nanosecond(),
+			newTime.Location())
+	}
+
+	return newTime, true
 }

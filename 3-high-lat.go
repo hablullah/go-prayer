@@ -24,7 +24,8 @@ const (
 	// LocalRelativeEstimation is convention that created by cooperation between Fiqh Council
 	// of Muslim World League and Islamic Crescents' Observation Project (ICOP). In short, this
 	// convention uses average percentage to calculate Fajr and Isha time for abnormal times.
-	// This convention used for area above 48.6 degrees. For more detail, check out
+	// This convention used for area between 48.6 and 66.6 latitude, where twilight doesn't
+	// exist but sunrise and sunset still occur. For more detail, check out this link:
 	// https://www.astronomycenter.net/latitude.html?l=en
 	LocalRelativeEstimation
 
