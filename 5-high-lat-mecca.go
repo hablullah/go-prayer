@@ -92,19 +92,19 @@ func applyMeccaTransition(schedules []PrayerSchedule, abnormalSummer, abnormalWi
 
 		// Calculate transition duration from leftover days
 		leftoverDays := len(schedules) - len(abnormalPeriod.Indexes)
-		nTransitionDays := int(math.Floor(float64(leftoverDays) / 2))
+		nTransitionDays := leftoverDays / 2
 
 		// Apply transition times
-		fajrTimes = createMeccaPreTransition(schedules, fajrTimes, abnormalPeriod, nTransitionDays)
-		fajrTimes = createMeccaPostTransition(schedules, fajrTimes, abnormalPeriod, nTransitionDays)
-		sunriseTimes = createMeccaPreTransition(schedules, sunriseTimes, abnormalPeriod, nTransitionDays)
-		sunriseTimes = createMeccaPostTransition(schedules, sunriseTimes, abnormalPeriod, nTransitionDays)
-		asrTimes = createMeccaPreTransition(schedules, asrTimes, abnormalPeriod, nTransitionDays)
-		asrTimes = createMeccaPostTransition(schedules, asrTimes, abnormalPeriod, nTransitionDays)
-		maghribTimes = createMeccaPreTransition(schedules, maghribTimes, abnormalPeriod, nTransitionDays)
-		maghribTimes = createMeccaPostTransition(schedules, maghribTimes, abnormalPeriod, nTransitionDays)
-		ishaTimes = createMeccaPreTransition(schedules, ishaTimes, abnormalPeriod, nTransitionDays)
-		ishaTimes = createMeccaPostTransition(schedules, ishaTimes, abnormalPeriod, nTransitionDays)
+		fajrTimes = createMeccaPreTransition(fajrTimes, abnormalPeriod, nTransitionDays)
+		fajrTimes = createMeccaPostTransition(fajrTimes, abnormalPeriod, nTransitionDays)
+		sunriseTimes = createMeccaPreTransition(sunriseTimes, abnormalPeriod, nTransitionDays)
+		sunriseTimes = createMeccaPostTransition(sunriseTimes, abnormalPeriod, nTransitionDays)
+		asrTimes = createMeccaPreTransition(asrTimes, abnormalPeriod, nTransitionDays)
+		asrTimes = createMeccaPostTransition(asrTimes, abnormalPeriod, nTransitionDays)
+		maghribTimes = createMeccaPreTransition(maghribTimes, abnormalPeriod, nTransitionDays)
+		maghribTimes = createMeccaPostTransition(maghribTimes, abnormalPeriod, nTransitionDays)
+		ishaTimes = createMeccaPreTransition(ishaTimes, abnormalPeriod, nTransitionDays)
+		ishaTimes = createMeccaPostTransition(ishaTimes, abnormalPeriod, nTransitionDays)
 	} else if !abnormalSummer.IsEmpty() && !abnormalWinter.IsEmpty() {
 		// Fetch indexes
 		summerIdxStart, _ := firstSliceItem(abnormalSummer.Indexes)
@@ -117,8 +117,8 @@ func applyMeccaTransition(schedules []PrayerSchedule, abnormalSummer, abnormalWi
 		summerWinterGap := int(math.Abs(float64(winterIdxStart-summerIdxEnd))) - 1 // after summer end, before winter start
 
 		// Calculate transition duration
-		winterSummerTransitionDays := int(math.Floor(float64(winterSummerGap) / 2)) // for post-winter and pre-summer
-		summerWinterTransitionDays := int(math.Floor(float64(summerWinterGap) / 2)) // for pre-winter and post-summer
+		winterSummerTransitionDays := winterSummerGap / 2 // for post-winter and pre-summer
+		summerWinterTransitionDays := summerWinterGap / 2 // for pre-winter and post-summer
 
 		preWinterTransitionDays := summerWinterTransitionDays
 		postWinterTransitionDays := winterSummerTransitionDays
@@ -126,28 +126,28 @@ func applyMeccaTransition(schedules []PrayerSchedule, abnormalSummer, abnormalWi
 		postSummerTransitionDays := summerWinterTransitionDays
 
 		// Create winter transition
-		fajrTimes = createMeccaPreTransition(schedules, fajrTimes, abnormalWinter, preWinterTransitionDays)
-		fajrTimes = createMeccaPostTransition(schedules, fajrTimes, abnormalWinter, postWinterTransitionDays)
-		sunriseTimes = createMeccaPreTransition(schedules, sunriseTimes, abnormalWinter, preWinterTransitionDays)
-		sunriseTimes = createMeccaPostTransition(schedules, sunriseTimes, abnormalWinter, postWinterTransitionDays)
-		asrTimes = createMeccaPreTransition(schedules, asrTimes, abnormalWinter, preWinterTransitionDays)
-		asrTimes = createMeccaPostTransition(schedules, asrTimes, abnormalWinter, postWinterTransitionDays)
-		maghribTimes = createMeccaPreTransition(schedules, maghribTimes, abnormalWinter, preWinterTransitionDays)
-		maghribTimes = createMeccaPostTransition(schedules, maghribTimes, abnormalWinter, postWinterTransitionDays)
-		ishaTimes = createMeccaPreTransition(schedules, ishaTimes, abnormalWinter, preWinterTransitionDays)
-		ishaTimes = createMeccaPostTransition(schedules, ishaTimes, abnormalWinter, postWinterTransitionDays)
+		fajrTimes = createMeccaPreTransition(fajrTimes, abnormalWinter, preWinterTransitionDays)
+		fajrTimes = createMeccaPostTransition(fajrTimes, abnormalWinter, postWinterTransitionDays)
+		sunriseTimes = createMeccaPreTransition(sunriseTimes, abnormalWinter, preWinterTransitionDays)
+		sunriseTimes = createMeccaPostTransition(sunriseTimes, abnormalWinter, postWinterTransitionDays)
+		asrTimes = createMeccaPreTransition(asrTimes, abnormalWinter, preWinterTransitionDays)
+		asrTimes = createMeccaPostTransition(asrTimes, abnormalWinter, postWinterTransitionDays)
+		maghribTimes = createMeccaPreTransition(maghribTimes, abnormalWinter, preWinterTransitionDays)
+		maghribTimes = createMeccaPostTransition(maghribTimes, abnormalWinter, postWinterTransitionDays)
+		ishaTimes = createMeccaPreTransition(ishaTimes, abnormalWinter, preWinterTransitionDays)
+		ishaTimes = createMeccaPostTransition(ishaTimes, abnormalWinter, postWinterTransitionDays)
 
 		// Create summer transition
-		fajrTimes = createMeccaPreTransition(schedules, fajrTimes, abnormalSummer, preSummerTransitionDays)
-		fajrTimes = createMeccaPostTransition(schedules, fajrTimes, abnormalSummer, postSummerTransitionDays)
-		sunriseTimes = createMeccaPreTransition(schedules, sunriseTimes, abnormalSummer, preSummerTransitionDays)
-		sunriseTimes = createMeccaPostTransition(schedules, sunriseTimes, abnormalSummer, postSummerTransitionDays)
-		asrTimes = createMeccaPreTransition(schedules, asrTimes, abnormalSummer, preSummerTransitionDays)
-		asrTimes = createMeccaPostTransition(schedules, asrTimes, abnormalSummer, postSummerTransitionDays)
-		maghribTimes = createMeccaPreTransition(schedules, maghribTimes, abnormalSummer, preSummerTransitionDays)
-		maghribTimes = createMeccaPostTransition(schedules, maghribTimes, abnormalSummer, postSummerTransitionDays)
-		ishaTimes = createMeccaPreTransition(schedules, ishaTimes, abnormalSummer, preSummerTransitionDays)
-		ishaTimes = createMeccaPostTransition(schedules, ishaTimes, abnormalSummer, postSummerTransitionDays)
+		fajrTimes = createMeccaPreTransition(fajrTimes, abnormalSummer, preSummerTransitionDays)
+		fajrTimes = createMeccaPostTransition(fajrTimes, abnormalSummer, postSummerTransitionDays)
+		sunriseTimes = createMeccaPreTransition(sunriseTimes, abnormalSummer, preSummerTransitionDays)
+		sunriseTimes = createMeccaPostTransition(sunriseTimes, abnormalSummer, postSummerTransitionDays)
+		asrTimes = createMeccaPreTransition(asrTimes, abnormalSummer, preSummerTransitionDays)
+		asrTimes = createMeccaPostTransition(asrTimes, abnormalSummer, postSummerTransitionDays)
+		maghribTimes = createMeccaPreTransition(maghribTimes, abnormalSummer, preSummerTransitionDays)
+		maghribTimes = createMeccaPostTransition(maghribTimes, abnormalSummer, postSummerTransitionDays)
+		ishaTimes = createMeccaPreTransition(ishaTimes, abnormalSummer, preSummerTransitionDays)
+		ishaTimes = createMeccaPostTransition(ishaTimes, abnormalSummer, postSummerTransitionDays)
 	}
 
 	// Put back times to schedule
@@ -163,7 +163,7 @@ func applyMeccaTransition(schedules []PrayerSchedule, abnormalSummer, abnormalWi
 	return schedules
 }
 
-func createMeccaPreTransition(schedules []PrayerSchedule, times []time.Time, abnormalPeriod AbnormalRange, nTransitionDays int) []time.Time {
+func createMeccaPreTransition(times []time.Time, abnormalPeriod AbnormalRange, nTransitionDays int) []time.Time {
 	// Fix transition days
 	if nTransitionDays > 30 {
 		nTransitionDays = 30
@@ -172,31 +172,30 @@ func createMeccaPreTransition(schedules []PrayerSchedule, times []time.Time, abn
 	// Get data where transition end, i.e. when abnormality start
 	endIdx, _ := firstSliceItem(abnormalPeriod.Indexes)
 	endTime := times[endIdx]
-	endTransit := schedules[endIdx].Zuhr
-	endDuration := endTransit.Sub(endTime)
 
 	// Get data where transition begin
-	startIdx := sliceRealIdx(schedules, endIdx-nTransitionDays)
+	startIdx := sliceRealIdx(times, endIdx-nTransitionDays)
 	startTime := times[startIdx]
-	startTransit := schedules[startIdx].Zuhr
-	startDuration := startTransit.Sub(startTime)
+	if startTime.After(endTime) {
+		startTime = startTime.AddDate(-1, 0, 0)
+	}
 
 	// Calculate duration step
-	durationDiff := endDuration - startDuration
+	durationDiff := endTime.Sub(startTime)
 	diffStep := durationDiff / time.Duration(nTransitionDays)
 
 	// Apply transition time
-	ci, duration := endIdx, endDuration
+	ci, ct := endIdx, endTime
 	for i := nTransitionDays - 1; i > 0; i-- { // minus 1 to exclude `startIdx`
 		ci = sliceRealIdx(times, ci-1)
-		duration -= diffStep // minus because backward
-		times[ci] = schedules[ci].Zuhr.Add(-duration)
+		ct = ct.Add(-diffStep)
+		times[ci] = ct
 	}
 
 	return times
 }
 
-func createMeccaPostTransition(schedules []PrayerSchedule, times []time.Time, abnormalPeriod AbnormalRange, nTransitionDays int) []time.Time {
+func createMeccaPostTransition(times []time.Time, abnormalPeriod AbnormalRange, nTransitionDays int) []time.Time {
 	// Fix transition days
 	if nTransitionDays > 30 {
 		nTransitionDays = 30
@@ -205,25 +204,24 @@ func createMeccaPostTransition(schedules []PrayerSchedule, times []time.Time, ab
 	// Get data where transition start, i.e. when abnormality end
 	startIdx, _ := lastSliceItem(abnormalPeriod.Indexes)
 	startTime := times[startIdx]
-	startTransit := schedules[startIdx].Zuhr
-	startDuration := startTransit.Sub(startTime)
 
 	// Get data where transition end
-	endIdx := sliceRealIdx(schedules, startIdx+nTransitionDays)
+	endIdx := sliceRealIdx(times, startIdx+nTransitionDays)
 	endTime := times[endIdx]
-	endTransit := schedules[endIdx].Zuhr
-	endDuration := endTransit.Sub(endTime)
+	if endTime.Before(startTime) {
+		endTime = endTime.AddDate(1, 0, 0)
+	}
 
 	// Calculate duration step
-	durationDiff := endDuration - startDuration
+	durationDiff := endTime.Sub(startTime)
 	diffStep := durationDiff / time.Duration(nTransitionDays)
 
 	// Apply transition time
-	ci, duration := startIdx, startDuration
+	ci, ct := startIdx, startTime
 	for i := 1; i < nTransitionDays; i++ {
 		ci = sliceRealIdx(times, ci+1)
-		duration += diffStep
-		times[ci] = schedules[ci].Zuhr.Add(-duration)
+		ct = ct.Add(diffStep)
+		times[ci] = ct
 	}
 
 	return times
