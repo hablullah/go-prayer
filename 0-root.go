@@ -115,6 +115,13 @@ func Calculate(cfg Config, year int) ([]PrayerSchedule, error) {
 		}
 	}
 
+	// Apply Isha times for convention where Isha time is fixed after Maghrib
+	if d := cfg.TwilightConvention.MaghribDuration; d > 0 {
+		for i, s := range schedules {
+			schedules[i].Isha = s.Maghrib.Add(d)
+		}
+	}
+
 	// Apply time correction
 	for i, s := range schedules {
 		s.Fajr = applyCorrection(s.Fajr, cfg.Corrections.Fajr)
