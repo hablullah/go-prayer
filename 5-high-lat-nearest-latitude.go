@@ -1,6 +1,21 @@
 package prayer
 
+import (
+	"math"
+	"time"
+)
+
 func calcHighLatNearestLatitude(cfg Config, year int, schedules []PrayerSchedule) []PrayerSchedule {
+	// This conventions only works if daytime exists (in other words, sunrise
+	// and Maghrib must exist). So if there are days where those time don't
+	// exist, stop and just return the schedule as it is.
+	// TODO: maybe put some warning log later.
+	for _, s := range schedules {
+		if s.Sunrise.IsZero() || s.Maghrib.IsZero() {
+			return schedules
+		}
+	}
+
 	// Get the nearest latitude
 	latitude := cfg.Latitude
 	if latitude > 45 {
@@ -19,30 +34,35 @@ func calcHighLatNearestLatitude(cfg Config, year int, schedules []PrayerSchedule
 		HighLatConvention:  Disabled}
 	nearestSchedules, _ := calcNormal(newCfg, year)
 
-	// Apply schedules from nearest latitude in abnormal period, using transit as common point.
-	for i, s := range schedules {
-		if s.IsNormal {
-			continue
-		}
-
-		// Calculate duration from schedule for nearest latitude
+	for i := range schedules {
+		// Calculate duration from schedule of nearest latitude
 		ns := nearestSchedules[i]
-		nsFajrRise := ns.Sunrise.Sub(ns.Fajr)
-		nsRiseTransit := ns.Zuhr.Sub(ns.Sunrise)
-		nsTransitMaghrib := ns.Maghrib.Sub(ns.Zuhr)
-		nsMaghribIsha := ns.Isha.Sub(ns.Maghrib)
+		nsDay := ns.Maghrib.Sub(ns.Sunrise).Seconds()
+		nsFajrRise := ns.Sunrise.Sub(ns.Fajr).Seconds()
+		nsMaghribIsha := ns.Isha.Sub(ns.Maghrib).Seconds()
 
-		// Apply the duration
-		if s.Sunrise.IsZero() {
-			s.Sunrise = s.Zuhr.Add(-nsRiseTransit)
-		}
+		nsNight := 24*60*60 - nsDay
+		nsFajrPercentage := nsFajrRise / nsNight
+		nsIshaPercentage := nsMaghribIsha / nsNight
 
-		if s.Maghrib.IsZero() {
-			s.Maghrib = s.Zuhr.Add(nsTransitMaghrib)
-		}
+		// Calculate duration from current schedule
+		s := schedules[i]
+		sDay := s.Maghrib.Sub(s.Sunrise).Seconds()
+		sFajrRise := s.Sunrise.Sub(s.Fajr).Seconds()
+		sMaghribIsha := s.Isha.Sub(s.Maghrib).Seconds()
 
-		s.Fajr = s.Sunrise.Add(-nsFajrRise)
-		s.Isha = s.Maghrib.Add(nsMaghribIsha)
+		sNight := 24*60*60 - sDay
+		sFajrPercentage := sFajrRise / sNight
+		sIshaPercentage := sMaghribIsha / sNight
+
+		// Apply the new durations
+		fajrPercentage := math.Min(nsFajrPercentage, sFajrPercentage)
+		ishaPercentage := math.Min(nsIshaPercentage, sIshaPercentage)
+		fajrDuration := time.Duration(math.Round(sNight * fajrPercentage * float64(time.Second)))
+		ishaDuration := time.Duration(math.Round(sNight * ishaPercentage * float64(time.Second)))
+
+		s.Fajr = s.Sunrise.Add(-fajrDuration)
+		s.Isha = s.Maghrib.Add(ishaDuration)
 		schedules[i] = s
 	}
 

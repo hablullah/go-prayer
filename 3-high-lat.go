@@ -17,9 +17,9 @@ const (
 	// https://www.prayertimes.dk/fatawa.html
 	Mecca
 
-	// ForceMecca is similar with Mecca, except it will be applied every day and not only on
+	// AlwaysMecca is similar with Mecca, except it will be applied every day and not only on
 	// the "abnormal" days.
-	ForceMecca
+	AlwaysMecca
 
 	// LocalRelativeEstimation is convention that created by cooperation between Fiqh Council
 	// of Muslim World League and Islamic Crescents' Observation Project (ICOP). In short, this
@@ -35,13 +35,13 @@ const (
 	NearestDay
 
 	// NearestLatitude is convention where the schedule for "abnormal" days will be taken from the
-	// schedule of location at 48 degrees latitude. In this convention, the day considered
-	// "abnormal" when there are no true night. See https://www.islamicity.com/prayertimes/Salat.pdf
+	// percentage of schedule in location at 45 degrees latitude.
+	// See https://www.islamicity.com/prayertimes/Salat.pdf
 	NearestLatitude
 
-	// ForceNearestLatitude is similar with NearestLatitude, except it will be applied every day
-	// and not only on the "abnormal" days.
-	ForceNearestLatitude
+	// NearestLatitudeAsIs is similar with NearestLatitude, except it will use the schedule from
+	// nearest latitude as it is instead of using its percentage.
+	NearestLatitudeAsIs
 
 	// ShariNormalDay is convention proposed by Mohamed Nabeel Tarabishy, Ph.D. In this convention,
 	// they propose that a normal day is when the fasting period is between 10h17m and 17h36m. If

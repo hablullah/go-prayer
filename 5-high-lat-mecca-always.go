@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-func calcHighLatForceMecca(cfg Config, year int, schedules []PrayerSchedule) []PrayerSchedule {
+func calcHighLatAlwaysMecca(cfg Config, year int, schedules []PrayerSchedule) []PrayerSchedule {
 	// Calculate schedule for Mecca
 	meccaTz, _ := time.LoadLocation("Asia/Riyadh")
 	meccaCfg := Config{

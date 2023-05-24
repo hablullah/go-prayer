@@ -1,6 +1,6 @@
 package prayer
 
-func calcHighLatForceNearestLatitude(cfg Config, year int) []PrayerSchedule {
+func calcHighLatNearestLatitudeAsIs(cfg Config, year int) []PrayerSchedule {
 	// Get the nearest latitude
 	latitude := cfg.Latitude
 	if latitude > 45 {
