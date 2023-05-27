@@ -83,7 +83,7 @@ type Config struct {
 func Calculate(cfg Config, year int) ([]PrayerSchedule, error) {
 	// Apply default config
 	if cfg.TwilightConvention == nil {
-		cfg.TwilightConvention = AstronomicalTwilight
+		cfg.TwilightConvention = AstronomicalTwilight()
 	}
 
 	// Calculate the schedules

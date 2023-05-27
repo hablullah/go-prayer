@@ -14,12 +14,13 @@ func calcHighLatAngleBased(cfg Config, schedules []PrayerSchedule) []PrayerSched
 	}
 
 	// If twilight angle missing, use the astronomical twilight
+	astronomical := AstronomicalTwilight()
 	if fajrAngle == 0 {
-		fajrAngle = AstronomicalTwilight.FajrAngle
+		fajrAngle = astronomical.FajrAngle
 	}
 
 	if ishaAngle == 0 {
-		ishaAngle = AstronomicalTwilight.IshaAngle
+		ishaAngle = astronomical.IshaAngle
 	}
 
 	// Apply schedules
