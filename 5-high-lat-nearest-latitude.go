@@ -5,7 +5,19 @@ import (
 	"time"
 )
 
-func calcHighLatNearestLatitude(cfg Config, year int, schedules []PrayerSchedule) []PrayerSchedule {
+// NearestLatitude is adapter where the schedules will be estimated using percentage of schedule
+// in location at 45 degrees latitude. This method will change the schedule for entire year to
+// prevent sudden changes in fasting time.
+//
+// This adapter only estimates time for Isha and Fajr and require sunrise and sunset time.
+// Therefore it's not suitable for area in extreme latitude (>=65 degrees).
+//
+// Reference: https://fiqh.islamonline.net/en/praying-and-fasting-at-high-latitudes/
+func NearestLatitude() HighLatitudeAdapter {
+	return highLatNearestLatitude
+}
+
+func highLatNearestLatitude(cfg Config, year int, schedules []PrayerSchedule) []PrayerSchedule {
 	// This conventions only works if daytime exists (in other words, sunrise
 	// and Maghrib must exist). So if there are days where those time don't
 	// exist, stop and just return the schedule as it is.
@@ -30,8 +42,7 @@ func calcHighLatNearestLatitude(cfg Config, year int, schedules []PrayerSchedule
 		Longitude:          cfg.Longitude,
 		Timezone:           cfg.Timezone,
 		TwilightConvention: cfg.TwilightConvention,
-		AsrConvention:      cfg.AsrConvention,
-		HighLatConvention:  Disabled}
+		AsrConvention:      cfg.AsrConvention}
 	nearestSchedules, _ := calcNormal(newCfg, year)
 
 	for i := range schedules {

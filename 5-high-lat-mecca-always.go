@@ -4,7 +4,16 @@ import (
 	"time"
 )
 
-func calcHighLatAlwaysMecca(cfg Config, year int, schedules []PrayerSchedule) []PrayerSchedule {
+// AlwaysMecca is similar with `Mecca`, except it will be applied every day and not only on
+// the "abnormal" days.
+//
+// This adapter doesn't require the sunrise and sunset to be exist in a day, so it's usable
+// for area in extreme latitudes (>=65 degrees).
+func AlwaysMecca() HighLatitudeAdapter {
+	return highLatAlwaysMecca
+}
+
+func highLatAlwaysMecca(cfg Config, year int, schedules []PrayerSchedule) []PrayerSchedule {
 	// Calculate schedule for Mecca
 	meccaTz, _ := time.LoadLocation("Asia/Riyadh")
 	meccaCfg := Config{
@@ -12,8 +21,7 @@ func calcHighLatAlwaysMecca(cfg Config, year int, schedules []PrayerSchedule) []
 		Longitude:          39.8254579358597,
 		Timezone:           meccaTz,
 		TwilightConvention: cfg.TwilightConvention,
-		AsrConvention:      cfg.AsrConvention,
-		HighLatConvention:  Disabled}
+		AsrConvention:      cfg.AsrConvention}
 	meccaSchedules, _ := calcNormal(meccaCfg, year)
 
 	// Apply schedules to current location, by matching it with duration in Mecca

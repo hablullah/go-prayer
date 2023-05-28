@@ -23,10 +23,9 @@ func Test_checkMissingScheduleInNormalArea(t *testing.T) {
 					latitude, longitude, tz)
 
 				cfg := prayer.Config{
-					Latitude:          latitude,
-					Longitude:         longitude,
-					Timezone:          tz,
-					HighLatConvention: prayer.Disabled,
+					Latitude:  latitude,
+					Longitude: longitude,
+					Timezone:  tz,
 				}
 
 				schedules, err := prayer.Calculate(cfg, 2022)
@@ -64,10 +63,9 @@ func Test_checkMissingScheduleInHigherArea(t *testing.T) {
 					latitude, longitude, tz)
 
 				cfg := prayer.Config{
-					Latitude:          latitude,
-					Longitude:         longitude,
-					Timezone:          tz,
-					HighLatConvention: prayer.Disabled,
+					Latitude:  latitude,
+					Longitude: longitude,
+					Timezone:  tz,
 				}
 
 				schedules, err := prayer.Calculate(cfg, 2022)

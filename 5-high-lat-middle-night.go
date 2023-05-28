@@ -5,7 +5,20 @@ import (
 	"time"
 )
 
-func calcHighLatMiddleNight(schedules []PrayerSchedule) []PrayerSchedule {
+// MiddleNight is adapter where the night period is divided into two halves. The
+// first half is considered to be the "night" and the other half as "day break".
+// Fajr and Isha in this method are assumed to be at mid-night during the abnormal
+// periods.
+//
+// This adapter depends on sunrise and sunset time, so it might not be suitable for
+// area in extreme latitudes (>=65 degrees).
+//
+// Reference: http://praytimes.org/calculation
+func MiddleNight() HighLatitudeAdapter {
+	return highLatMiddleNight
+}
+
+func highLatMiddleNight(_ Config, _ int, schedules []PrayerSchedule) []PrayerSchedule {
 	for i, s := range schedules {
 		// Middle night require Sunrise and Maghrib, and only done if Fajr or Isha missing
 		if !s.Sunrise.IsZero() && !s.Maghrib.IsZero() && (s.Fajr.IsZero() || s.Isha.IsZero()) {

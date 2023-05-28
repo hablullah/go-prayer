@@ -44,6 +44,19 @@ type ScheduleCorrections struct {
 	Isha    time.Duration
 }
 
+// TwilightConvention is the convention that specifies time for Fajr (dawn) and Isha (dusk). Most of
+// the conventions use Solar angle elevation for both dawn and dusk time, however there are several
+// convention where dusk times depends on sunset (Maghrib) times.
+type TwilightConvention struct {
+	FajrAngle       float64
+	IshaAngle       float64
+	MaghribDuration time.Duration
+}
+
+// HighLatitudeAdapter is function for calculating prayer times in area with latitude >45 degrees.
+// Check out https://www.prayertimes.dk/story.html for why this is needed.
+type HighLatitudeAdapter func(cfg Config, year int, currentSchedules []PrayerSchedule) []PrayerSchedule
+
 // Config is configuration that used to calculate the prayer times.
 type Config struct {
 	// Latitude is the latitude of the location. Positive for north area and negative for south area.
@@ -68,9 +81,11 @@ type Config struct {
 	// Shafii and Hanafi. By default it will use Shafii.
 	AsrConvention AsrConvention
 
-	// HighLatConvention is the convention for calculation prayer times in area with high latitude
-	// (>=48 degrees). By default it will use `LocalRelativeEstimation`.
-	HighLatConvention HighLatConvention
+	// HighLatitudeAdapter is the function for adjusting prayer times in area with high latitude
+	// (>=45 degrees). If not specified, it will not calculate the adjustment for higher latitude
+	// and instead will return the schedule as it is. For area in high or extreme latitude, it might
+	// return zero for Fajr, Sunrise, Maghrib and Isha.
+	HighLatitudeAdapter HighLatitudeAdapter
 
 	// Corrections is used to corrects calculated time for each specified prayer.
 	Corrections ScheduleCorrections
@@ -89,30 +104,9 @@ func Calculate(cfg Config, year int) ([]PrayerSchedule, error) {
 	// Calculate the schedules
 	schedules, nAbnormal := calcNormal(cfg, year)
 
-	// Apply high latitude convention
-	if nAbnormal > 0 {
-		switch cfg.HighLatConvention {
-		case Mecca:
-			schedules = calcHighLatMecca(cfg, year, schedules)
-		case AlwaysMecca:
-			schedules = calcHighLatAlwaysMecca(cfg, year, schedules)
-		case LocalRelativeEstimation:
-			schedules = calcLocalRelativeEstimation(cfg, year, schedules)
-		case NearestDay:
-			schedules = calcHighLatNearestDay(schedules)
-		case NearestLatitude:
-			schedules = calcHighLatNearestLatitude(cfg, year, schedules)
-		case NearestLatitudeAsIs:
-			schedules = calcHighLatNearestLatitudeAsIs(cfg, year)
-		case ShariNormalDay:
-			schedules = calcHighLatShariNormalDay(cfg, year, schedules)
-		case AngleBased:
-			schedules = calcHighLatAngleBased(cfg, schedules)
-		case OneSeventhNight:
-			schedules = calcHighLatOneSeventhNight(schedules)
-		case MiddleNight:
-			schedules = calcHighLatMiddleNight(schedules)
-		}
+	// Apply high latitude adapter
+	if nAbnormal > 0 && cfg.HighLatitudeAdapter != nil {
+		schedules = cfg.HighLatitudeAdapter(cfg, year, schedules)
 	}
 
 	// Apply Isha times for convention where Isha time is fixed after Maghrib

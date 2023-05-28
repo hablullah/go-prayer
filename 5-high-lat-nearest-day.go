@@ -1,6 +1,17 @@
 package prayer
 
-func calcHighLatNearestDay(schedules []PrayerSchedule) []PrayerSchedule {
+// NearestDay is adapter where the schedule for "abnormal" days will be taken from the
+// schedule of the last "normal" day.
+//
+// This adapter doesn't require the sunrise and sunset to be exist in a day, so it's
+// usable for area in extreme latitudes (>=65 degrees).
+//
+// Reference: https://www.islamicity.com/prayertimes/Salat.pdf
+func NearestDay() HighLatitudeAdapter {
+	return highLatNearestDay
+}
+
+func highLatNearestDay(_ Config, _ int, schedules []PrayerSchedule) []PrayerSchedule {
 	abnormalSummer, abnormalWinter := extractAbnormalSchedules(schedules)
 
 	for _, as := range []AbnormalRange{abnormalSummer, abnormalWinter} {

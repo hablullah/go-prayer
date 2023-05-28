@@ -5,7 +5,23 @@ import (
 	"time"
 )
 
-func calcHighLatMecca(cfg Config, year int, schedules []PrayerSchedule) []PrayerSchedule {
+// Mecca is adapter based on Fatwa from Dar Al Iftah Al Misrriyah number 2806 dated at 2010-08-08.
+// They propose that area with higher latitude to follows the schedule in Mecca when abnormal days
+// occured, using transit time as the common point. Here the day is considered "abnormal" when there
+// are no true night, or the day length is less than 4 hours.
+//
+// To prevent sudden schedule changes, this method uses transition period for maximum one month
+// before and after the abnormal periods.
+//
+// This adapter doesn't require the sunrise and sunset to be exist in a day, so it's usable
+// for area in extreme latitudes (>=65 degrees).
+//
+// Reference: https://www.prayertimes.dk/fatawa.html
+func Mecca() HighLatitudeAdapter {
+	return highLatMecca
+}
+
+func highLatMecca(cfg Config, year int, schedules []PrayerSchedule) []PrayerSchedule {
 	// Additional rule: day is normal if daylength is more than 4 hour
 	for i, s := range schedules {
 		if s.IsNormal {
@@ -27,8 +43,7 @@ func calcHighLatMecca(cfg Config, year int, schedules []PrayerSchedule) []Prayer
 		Longitude:          39.8254579358597,
 		Timezone:           meccaTz,
 		TwilightConvention: cfg.TwilightConvention,
-		AsrConvention:      cfg.AsrConvention,
-		HighLatConvention:  Disabled}
+		AsrConvention:      cfg.AsrConvention}
 	meccaSchedules, _ := calcNormal(meccaCfg, year)
 
 	// Apply Mecca schedules in abnormal period by matching it with duration

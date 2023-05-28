@@ -2,15 +2,6 @@ package prayer
 
 import "time"
 
-// TwilightConvention is the convention that specifies time for Fajr (dawn) and Isha (dusk). Most of
-// the conventions use Solar angle elevation for both dawn and dusk time, however there are several
-// convention where dusk times depends on sunset (Maghrib) times.
-type TwilightConvention struct {
-	FajrAngle       float64
-	IshaAngle       float64
-	MaghribDuration time.Duration
-}
-
 // AstronomicalTwilight is moment when Sun is 18 degrees below horizon. At this point most stars
 // and other celestial objects still can be seen, however astronomers may be unable to observe
 // some of the fainter stars and galaxies, hence the name of this twilight phase. This is the
