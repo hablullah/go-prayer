@@ -80,7 +80,8 @@ type Config struct {
 	// calculator doesn't use it so it's fine to omit it.
 	Elevation float64
 
-	// Timezone is the time zone of the location.
+	// Timezone is the time zone of the location specified above. If not specified,
+	// it will use UTC.
 	Timezone *time.Location
 
 	// TwilightConvention is the convention that used to specify time for Fajr and
@@ -108,6 +109,10 @@ type Config struct {
 // Calculate calculates the prayer time for the entire year with specified configuration.
 func Calculate(cfg Config, year int) ([]Schedule, error) {
 	// Apply default config
+	if cfg.Timezone == nil {
+		cfg.Timezone = time.UTC
+	}
+
 	if cfg.TwilightConvention == nil {
 		cfg.TwilightConvention = AstronomicalTwilight()
 	}
