@@ -7,7 +7,7 @@ import (
 	"github.com/hablullah/go-sampa"
 )
 
-func calcNormal(cfg Config, year int) ([]PrayerSchedule, int) {
+func calcNormal(cfg Config, year int) ([]Schedule, int) {
 	// Prepare location
 	location := sampa.Location{
 		Latitude:  cfg.Latitude,
@@ -49,7 +49,7 @@ func calcNormal(cfg Config, year int) ([]PrayerSchedule, int) {
 	nDays := int(limit.Sub(start).Hours() / 24)
 
 	// Create slice to contain result
-	schedules := make([]PrayerSchedule, nDays)
+	schedules := make([]Schedule, nDays)
 
 	// Calculate each day
 	var idx int
@@ -59,7 +59,7 @@ func calcNormal(cfg Config, year int) ([]PrayerSchedule, int) {
 		e, _ := sampa.GetSunEvents(dt, location, nil, customEvents...)
 
 		// Create the prayer schedule
-		s := PrayerSchedule{
+		s := Schedule{
 			Date:    dt.Format("2006-01-02"),
 			Fajr:    e.Others["fajr"].DateTime,
 			Sunrise: e.Sunrise.DateTime,

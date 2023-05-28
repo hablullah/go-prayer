@@ -22,7 +22,7 @@ func ShariNormalDay() HighLatitudeAdapter {
 	return highLatShariNormalDay
 }
 
-func highLatShariNormalDay(cfg Config, year int, schedules []PrayerSchedule) []PrayerSchedule {
+func highLatShariNormalDay(cfg Config, year int, schedules []Schedule) []Schedule {
 	// Get the nearest latitude
 	latitude := cfg.Latitude
 	if latitude > 45 {

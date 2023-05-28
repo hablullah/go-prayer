@@ -12,7 +12,7 @@ func (ar abnormalRange) IsEmpty() bool {
 	return len(ar.Indexes) == 0
 }
 
-func extractAbnormalSchedules(schedules []PrayerSchedule) (abnormalSummer, abnormalWinter abnormalRange) {
+func extractAbnormalSchedules(schedules []Schedule) (abnormalSummer, abnormalWinter abnormalRange) {
 	// If there are no schedules, return empty
 	if len(schedules) == 0 {
 		return

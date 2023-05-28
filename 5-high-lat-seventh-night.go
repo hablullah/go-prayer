@@ -17,7 +17,7 @@ func OneSeventhNight() HighLatitudeAdapter {
 	return highLatOneSeventhNight
 }
 
-func highLatOneSeventhNight(_ Config, _ int, schedules []PrayerSchedule) []PrayerSchedule {
+func highLatOneSeventhNight(_ Config, _ int, schedules []Schedule) []Schedule {
 	for i, s := range schedules {
 		// Seventh night require Sunrise and Maghrib, and only done if Fajr or Isha missing
 		if !s.Sunrise.IsZero() && !s.Maghrib.IsZero() && (s.Fajr.IsZero() || s.Isha.IsZero()) {

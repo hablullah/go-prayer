@@ -13,7 +13,7 @@ func AlwaysMecca() HighLatitudeAdapter {
 	return highLatAlwaysMecca
 }
 
-func highLatAlwaysMecca(cfg Config, year int, schedules []PrayerSchedule) []PrayerSchedule {
+func highLatAlwaysMecca(cfg Config, year int, schedules []Schedule) []Schedule {
 	// Calculate schedule for Mecca
 	meccaTz, _ := time.LoadLocation("Asia/Riyadh")
 	meccaCfg := Config{

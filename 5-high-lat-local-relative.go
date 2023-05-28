@@ -17,7 +17,7 @@ func LocalRelativeEstimation() HighLatitudeAdapter {
 	return highLatLocalRelativeEstimation
 }
 
-func highLatLocalRelativeEstimation(cfg Config, year int, schedules []PrayerSchedule) []PrayerSchedule {
+func highLatLocalRelativeEstimation(cfg Config, year int, schedules []Schedule) []Schedule {
 	var (
 		nFajrSample     int
 		nIshaSample     int
@@ -85,7 +85,7 @@ func highLatLocalRelativeEstimation(cfg Config, year int, schedules []PrayerSche
 	return schedules
 }
 
-func applyLocalRelativeTransition(schedules []PrayerSchedule, abnormalPeriod abnormalRange) []PrayerSchedule {
+func applyLocalRelativeTransition(schedules []Schedule, abnormalPeriod abnormalRange) []Schedule {
 	// If there are no abnormality, return as it is
 	if abnormalPeriod.IsEmpty() {
 		return schedules

@@ -4,8 +4,8 @@ import (
 	"time"
 )
 
-// PrayerSchedule is the result of prayer time calculation.
-type PrayerSchedule struct {
+// Schedule is the time of each prayer (and related events) on a day.
+type Schedule struct {
 	// Date is the ISO date, useful for logging.
 	Date string
 
@@ -62,7 +62,7 @@ type TwilightConvention struct {
 
 // HighLatitudeAdapter is function for calculating prayer times in area with latitude
 // >45 degrees. Check out https://www.prayertimes.dk/story.html for why this is needed.
-type HighLatitudeAdapter func(cfg Config, year int, currentSchedules []PrayerSchedule) []PrayerSchedule
+type HighLatitudeAdapter func(cfg Config, year int, currentSchedules []Schedule) []Schedule
 
 // Config is configuration that used to calculate the prayer times.
 type Config struct {
@@ -106,7 +106,7 @@ type Config struct {
 }
 
 // Calculate calculates the prayer time for the entire year with specified configuration.
-func Calculate(cfg Config, year int) ([]PrayerSchedule, error) {
+func Calculate(cfg Config, year int) ([]Schedule, error) {
 	// Apply default config
 	if cfg.TwilightConvention == nil {
 		cfg.TwilightConvention = AstronomicalTwilight()

@@ -13,7 +13,7 @@ func NearestLatitudeAsIs() HighLatitudeAdapter {
 	return highLatNearestLatitudeAsIs
 }
 
-func highLatNearestLatitudeAsIs(cfg Config, year int, _ []PrayerSchedule) []PrayerSchedule {
+func highLatNearestLatitudeAsIs(cfg Config, year int, _ []Schedule) []Schedule {
 	// Get the nearest latitude
 	latitude := cfg.Latitude
 	if latitude > 45 {

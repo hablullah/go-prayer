@@ -17,7 +17,7 @@ func NearestLatitude() HighLatitudeAdapter {
 	return highLatNearestLatitude
 }
 
-func highLatNearestLatitude(cfg Config, year int, schedules []PrayerSchedule) []PrayerSchedule {
+func highLatNearestLatitude(cfg Config, year int, schedules []Schedule) []Schedule {
 	// This conventions only works if daytime exists (in other words, sunrise
 	// and Maghrib must exist). So if there are days where those time don't
 	// exist, stop and just return the schedule as it is.

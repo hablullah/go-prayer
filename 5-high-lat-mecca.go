@@ -22,7 +22,7 @@ func Mecca() HighLatitudeAdapter {
 	return highLatMecca
 }
 
-func highLatMecca(cfg Config, year int, schedules []PrayerSchedule) []PrayerSchedule {
+func highLatMecca(cfg Config, year int, schedules []Schedule) []Schedule {
 	// Additional rule: day is normal if daylength is more than 4 hour
 	for i, s := range schedules {
 		if s.IsNormal {
@@ -74,7 +74,7 @@ func highLatMecca(cfg Config, year int, schedules []PrayerSchedule) []PrayerSche
 	return schedules
 }
 
-func applyMeccaTransition(schedules []PrayerSchedule, abnormalSummer, abnormalWinter abnormalRange) []PrayerSchedule {
+func applyMeccaTransition(schedules []Schedule, abnormalSummer, abnormalWinter abnormalRange) []Schedule {
 	// If there are no abnormality, return as it is
 	if abnormalSummer.IsEmpty() && abnormalWinter.IsEmpty() {
 		return schedules

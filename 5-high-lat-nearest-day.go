@@ -11,7 +11,7 @@ func NearestDay() HighLatitudeAdapter {
 	return highLatNearestDay
 }
 
-func highLatNearestDay(_ Config, _ int, schedules []PrayerSchedule) []PrayerSchedule {
+func highLatNearestDay(_ Config, _ int, schedules []Schedule) []Schedule {
 	abnormalSummer, abnormalWinter := extractAbnormalSchedules(schedules)
 
 	for _, as := range []abnormalRange{abnormalSummer, abnormalWinter} {

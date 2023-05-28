@@ -119,7 +119,7 @@ func genLatitudeList(start, end, step float64) []float64 {
 	return list
 }
 
-func strSchedule(s prayer.PrayerSchedule) string {
+func strSchedule(s prayer.Schedule) string {
 	bt, _ := json.Marshal(&s)
 	return string(bt)
 }

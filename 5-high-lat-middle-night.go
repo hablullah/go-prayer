@@ -18,7 +18,7 @@ func MiddleNight() HighLatitudeAdapter {
 	return highLatMiddleNight
 }
 
-func highLatMiddleNight(_ Config, _ int, schedules []PrayerSchedule) []PrayerSchedule {
+func highLatMiddleNight(_ Config, _ int, schedules []Schedule) []Schedule {
 	for i, s := range schedules {
 		// Middle night require Sunrise and Maghrib, and only done if Fajr or Isha missing
 		if !s.Sunrise.IsZero() && !s.Maghrib.IsZero() && (s.Fajr.IsZero() || s.Isha.IsZero()) {
