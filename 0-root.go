@@ -125,21 +125,32 @@ func Calculate(cfg Config, year int) ([]Schedule, error) {
 		schedules = cfg.HighLatitudeAdapter(cfg, year, schedules)
 	}
 
-	// Apply Isha times for convention where Isha time is fixed after Maghrib
-	if d := cfg.TwilightConvention.MaghribDuration; d > 0 {
-		for i, s := range schedules {
-			schedules[i].Isha = s.Maghrib.Add(d)
-		}
-	}
-
-	// Apply time correction
+	// Final check
+	fixedMaghribDuration := cfg.TwilightConvention.MaghribDuration
 	for i, s := range schedules {
+		// Apply Isha times for convention where Isha time is fixed after Maghrib
+		if fixedMaghribDuration > 0 {
+			s.Isha = s.Maghrib.Add(fixedMaghribDuration)
+		}
+
+		// Apply time correction
 		s.Fajr = applyCorrection(s.Fajr, cfg.Corrections.Fajr)
 		s.Sunrise = applyCorrection(s.Sunrise, cfg.Corrections.Sunrise)
 		s.Zuhr = applyCorrection(s.Zuhr, cfg.Corrections.Zuhr)
 		s.Asr = applyCorrection(s.Asr, cfg.Corrections.Asr)
 		s.Maghrib = applyCorrection(s.Maghrib, cfg.Corrections.Maghrib)
 		s.Isha = applyCorrection(s.Isha, cfg.Corrections.Isha)
+
+		// If needed round the time to minute
+		if !cfg.PreciseToSeconds {
+			s.Fajr = s.Fajr.Round(time.Minute)
+			s.Sunrise = s.Sunrise.Round(time.Minute)
+			s.Zuhr = s.Zuhr.Round(time.Minute)
+			s.Asr = s.Asr.Round(time.Minute)
+			s.Maghrib = s.Maghrib.Round(time.Minute)
+			s.Isha = s.Isha.Round(time.Minute)
+		}
+
 		schedules[i] = s
 	}
 
