@@ -5,16 +5,16 @@ import (
 	"time"
 )
 
-// AngleBased is adapter where the night period is divided into several parts, depending on
-// the value of twilight angle for Fajr and Isha.
+// AngleBased is adapter where the night period is divided into several parts,
+// depending on the value of twilight angle for Fajr and Isha.
 //
-// For example, let a be the twilight angle for Isha, and let t = a/60. The period between
-// sunset and sunrise is divided into t parts. Isha begins after the first part. So, if the
-// twilight angle for Isha is 15, then Isha begins at the end of the first quarter (15/60)
-// of the night. Time for Fajr is calculated similarly.
+// For example, let a be the twilight angle for Isha, and let t = a/60. The period
+// between sunset and sunrise is divided into t parts. Isha begins after the first
+// part. So, if the twilight angle for Isha is 15, then Isha begins at the end of the
+// first quarter (15/60) of the night. Time for Fajr is calculated similarly.
 //
-// This adapter depends on sunrise and sunset time, so it might not be suitable for area in
-// extreme latitudes (>=65 degrees).
+// This adapter depends on sunrise and sunset time, so it might not be suitable for
+// area in extreme latitudes (>=65 degrees).
 //
 // Reference: http://praytimes.org/calculation
 func AngleBased() HighLatitudeAdapter {

@@ -5,12 +5,12 @@ import (
 	"time"
 )
 
-// NearestLatitude is adapter where the schedules will be estimated using percentage of schedule
-// in location at 45 degrees latitude. This method will change the schedule for entire year to
-// prevent sudden changes in fasting time.
+// NearestLatitude is adapter where the schedules will be estimated using percentage
+// of schedule in location at 45 degrees latitude. This method will change the schedule
+// for entire year to prevent sudden changes in fasting time.
 //
-// This adapter only estimates time for Isha and Fajr and require sunrise and sunset time.
-// Therefore it's not suitable for area in extreme latitude (>=65 degrees).
+// This adapter only estimates time for Isha and Fajr and require sunrise and sunset
+// time. Therefore it's not suitable for area in extreme latitude (>=65 degrees).
 //
 // Reference: https://fiqh.islamonline.net/en/praying-and-fasting-at-high-latitudes/
 func NearestLatitude() HighLatitudeAdapter {

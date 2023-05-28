@@ -5,11 +5,12 @@ import (
 	"time"
 )
 
-// OneSeventhNight is adapter where the night period is divided into seven parts. Isha
-// starts when the first seventh part ends, and Fajr starts when the last seventh part starts.
+// OneSeventhNight is adapter where the night period is divided into seven parts.
+// Isha starts when the first seventh part ends, and Fajr starts when the last seventh
+// part starts.
 //
-// This adapter depends on sunrise and sunset time, so it might not be suitable for area in
-// extreme latitudes (>=65 degrees).
+// This adapter depends on sunrise and sunset time, so it might not be suitable for
+// area in extreme latitudes (>=65 degrees).
 //
 // Reference: http://praytimes.org/calculation
 func OneSeventhNight() HighLatitudeAdapter {

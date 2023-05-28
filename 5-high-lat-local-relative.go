@@ -4,12 +4,13 @@ import (
 	"time"
 )
 
-// LocalRelativeEstimation is adapter using method that created by cooperation between Fiqh
-// Council of Muslim World League and Islamic Crescents' Observation Project (ICOP). In short,
-// this method uses average percentage to calculate Fajr and Isha time for abnormal times.
+// LocalRelativeEstimation is adapter using method that created by cooperation between
+// Fiqh Council of Muslim World League and Islamic Crescents' Observation Project (ICOP).
+// In short, this method uses average percentage to calculate Fajr and Isha time for
+// abnormal times.
 //
-// This adapter only estimates time for Isha and Fajr and require sunrise and sunset time.
-// Therefore it's not suitable for area in extreme latitude (>=65 degrees).
+// This adapter only estimates time for Isha and Fajr and require sunrise and sunset
+// time. Therefore it's not suitable for area in extreme latitude (>=65 degrees).
 //
 // Reference: https://www.astronomycenter.net/latitude.html?l=en
 func LocalRelativeEstimation() HighLatitudeAdapter {

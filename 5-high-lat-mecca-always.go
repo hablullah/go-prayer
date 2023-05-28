@@ -4,11 +4,11 @@ import (
 	"time"
 )
 
-// AlwaysMecca is similar with `Mecca`, except it will be applied every day and not only on
-// the "abnormal" days.
+// AlwaysMecca is similar with `Mecca`, except it will be applied every day and not
+// only on the "abnormal" days.
 //
-// This adapter doesn't require the sunrise and sunset to be exist in a day, so it's usable
-// for area in extreme latitudes (>=65 degrees).
+// This adapter doesn't require the sunrise and sunset to be exist in a day, so it's
+// usable for area in extreme latitudes (>=65 degrees).
 func AlwaysMecca() HighLatitudeAdapter {
 	return highLatAlwaysMecca
 }

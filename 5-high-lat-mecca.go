@@ -5,16 +5,17 @@ import (
 	"time"
 )
 
-// Mecca is adapter based on Fatwa from Dar Al Iftah Al Misrriyah number 2806 dated at 2010-08-08.
-// They propose that area with higher latitude to follows the schedule in Mecca when abnormal days
-// occured, using transit time as the common point. Here the day is considered "abnormal" when there
-// are no true night, or the day length is less than 4 hours.
+// Mecca is adapter based on Fatwa from Dar Al Iftah Al Misrriyah number 2806 dated
+// at 2010-08-08. They propose that area with higher latitude to follows the schedule
+// in Mecca when abnormal days occured, using transit time as the common point. Here
+// the day is considered "abnormal" when there are no true night, or the day length is
+// less than 4 hours.
 //
-// To prevent sudden schedule changes, this method uses transition period for maximum one month
-// before and after the abnormal periods.
+// To prevent sudden schedule changes, this method uses transition period for maximum
+// one month before and after the abnormal periods.
 //
-// This adapter doesn't require the sunrise and sunset to be exist in a day, so it's usable
-// for area in extreme latitudes (>=65 degrees).
+// This adapter doesn't require the sunrise and sunset to be exist in a day, so it's
+// usable for area in extreme latitudes (>=65 degrees).
 //
 // Reference: https://www.prayertimes.dk/fatawa.html
 func Mecca() HighLatitudeAdapter {

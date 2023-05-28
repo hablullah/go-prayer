@@ -10,9 +10,9 @@ import (
 	"github.com/hablullah/go-prayer"
 )
 
-// In this test, we'll look for missing prayer times in area with normal latitude (below and
-// up to 45 degrees). In this area, every prayer times must be found since the Sun rise and
-// set properly.
+// In this test, we'll look for missing prayer times in area with normal latitude
+// (below and up to 45 degrees). In this area, every prayer times must be found since
+// the Sun rise and set properly.
 func Test_checkMissingScheduleInNormalArea(t *testing.T) {
 	for longitude := -180.; longitude <= 180; longitude += 5 {
 		timezones := genTzList(longitude)
@@ -46,8 +46,8 @@ func Test_checkMissingScheduleInNormalArea(t *testing.T) {
 	}
 }
 
-// In this test, we'll look for missing prayer times in area with higher latitude (between 45
-// and 64 degrees). In this area, Sunrise, Asr and Maghrib should be exist.
+// In this test, we'll look for missing prayer times in area with higher latitude
+// (between 45 and 64 degrees). In this area, Sunrise, Asr and Maghrib should be exist.
 func Test_checkMissingScheduleInHigherArea(t *testing.T) {
 	higherLatitudes := append(
 		genLatitudeList(-45, -64, 5),
