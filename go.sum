@@ -2,3 +2,5 @@ github.com/hablullah/go-juliandays v1.0.1-0.20220316153050-f56193695a5b h1:Qp6WC
 github.com/hablullah/go-juliandays v1.0.1-0.20220316153050-f56193695a5b/go.mod h1:0JOYq4oFOuDja+oospuc61YoX+uNEn7Z6uHYTbBzdGc=
 github.com/hablullah/go-sampa v0.0.0-20230520122823-970ebed37f51 h1:BFsDqUioPKInNAsQ2EaEIAAJYJeakalheEVLt+TKZPw=
 github.com/hablullah/go-sampa v0.0.0-20230520122823-970ebed37f51/go.mod h1:NgDnpqL95HgRPkal510TVk7tI6+aLwO3wJgoj0dQ4Pc=
+github.com/hablullah/go-sampa v1.0.0 h1:8SiiPC7LktYsBYkoitGGPRL416TDXjkECRZsAkUbgy4=
+github.com/hablullah/go-sampa v1.0.0/go.mod h1:NgDnpqL95HgRPkal510TVk7tI6+aLwO3wJgoj0dQ4Pc=
