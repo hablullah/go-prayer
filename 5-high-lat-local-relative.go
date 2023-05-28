@@ -63,7 +63,7 @@ func highLatLocalRelativeEstimation(cfg Config, year int, schedules []PrayerSche
 	abnormalSummer, abnormalWinter := extractAbnormalSchedules(schedules)
 
 	// Fix Fajr and Isha times in abnormal days
-	for _, as := range []AbnormalRange{abnormalSummer, abnormalWinter} {
+	for _, as := range []abnormalRange{abnormalSummer, abnormalWinter} {
 		for _, i := range as.Indexes {
 			s := schedules[i]
 			dayDuration := s.Maghrib.Sub(s.Sunrise).Seconds()
@@ -84,7 +84,7 @@ func highLatLocalRelativeEstimation(cfg Config, year int, schedules []PrayerSche
 	return schedules
 }
 
-func applyLocalRelativeTransition(schedules []PrayerSchedule, abnormalPeriod AbnormalRange) []PrayerSchedule {
+func applyLocalRelativeTransition(schedules []PrayerSchedule, abnormalPeriod abnormalRange) []PrayerSchedule {
 	// If there are no abnormality, return as it is
 	if abnormalPeriod.IsEmpty() {
 		return schedules

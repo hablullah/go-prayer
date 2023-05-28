@@ -14,7 +14,7 @@ func NearestDay() HighLatitudeAdapter {
 func highLatNearestDay(_ Config, _ int, schedules []PrayerSchedule) []PrayerSchedule {
 	abnormalSummer, abnormalWinter := extractAbnormalSchedules(schedules)
 
-	for _, as := range []AbnormalRange{abnormalSummer, abnormalWinter} {
+	for _, as := range []abnormalRange{abnormalSummer, abnormalWinter} {
 		// If this abnormal period is empty, skip
 		if as.IsEmpty() {
 			continue

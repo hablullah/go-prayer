@@ -7,10 +7,6 @@ import (
 	"github.com/hablullah/go-sampa"
 )
 
-func CalcNormal(cfg Config, year int) ([]PrayerSchedule, int) {
-	return calcNormal(cfg, year)
-}
-
 func calcNormal(cfg Config, year int) ([]PrayerSchedule, int) {
 	// Prepare location
 	location := sampa.Location{
@@ -47,9 +43,7 @@ func calcNormal(cfg Config, year int) ([]PrayerSchedule, int) {
 		},
 	}}
 
-	// Calculate schedules for each day in a year. Here we also calculate the first day
-	// of next year and the last day of the previous year. This is useful to check if
-	// some schedules chained to tomorrow or yesterday events.
+	// Calculate schedules for each day in a year.
 	start := time.Date(year, 1, 1, 0, 0, 0, 0, cfg.Timezone)
 	limit := start.AddDate(1, 0, 0)
 	nDays := int(limit.Sub(start).Hours() / 24)

@@ -48,7 +48,7 @@ func highLatMecca(cfg Config, year int, schedules []PrayerSchedule) []PrayerSche
 
 	// Apply Mecca schedules in abnormal period by matching it with duration
 	// in Mecca using transit time (noon) as the base.
-	for _, as := range []AbnormalRange{abnormalSummer, abnormalWinter} {
+	for _, as := range []abnormalRange{abnormalSummer, abnormalWinter} {
 		for _, i := range as.Indexes {
 			// Calculate duration from Mecca schedule
 			ms := meccaSchedules[i]
@@ -73,7 +73,7 @@ func highLatMecca(cfg Config, year int, schedules []PrayerSchedule) []PrayerSche
 	return schedules
 }
 
-func applyMeccaTransition(schedules []PrayerSchedule, abnormalSummer, abnormalWinter AbnormalRange) []PrayerSchedule {
+func applyMeccaTransition(schedules []PrayerSchedule, abnormalSummer, abnormalWinter abnormalRange) []PrayerSchedule {
 	// If there are no abnormality, return as it is
 	if abnormalSummer.IsEmpty() && abnormalWinter.IsEmpty() {
 		return schedules
@@ -178,7 +178,7 @@ func applyMeccaTransition(schedules []PrayerSchedule, abnormalSummer, abnormalWi
 	return schedules
 }
 
-func createMeccaPreTransition(times []time.Time, abnormalPeriod AbnormalRange, nTransitionDays int) []time.Time {
+func createMeccaPreTransition(times []time.Time, abnormalPeriod abnormalRange, nTransitionDays int) []time.Time {
 	// Fix transition days
 	if nTransitionDays > 30 {
 		nTransitionDays = 30
@@ -210,7 +210,7 @@ func createMeccaPreTransition(times []time.Time, abnormalPeriod AbnormalRange, n
 	return times
 }
 
-func createMeccaPostTransition(times []time.Time, abnormalPeriod AbnormalRange, nTransitionDays int) []time.Time {
+func createMeccaPostTransition(times []time.Time, abnormalPeriod abnormalRange, nTransitionDays int) []time.Time {
 	// Fix transition days
 	if nTransitionDays > 30 {
 		nTransitionDays = 30

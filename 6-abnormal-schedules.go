@@ -2,17 +2,17 @@ package prayer
 
 import "time"
 
-type AbnormalRange struct {
+type abnormalRange struct {
 	Start   time.Time
 	End     time.Time
 	Indexes []int
 }
 
-func (sr AbnormalRange) IsEmpty() bool {
-	return len(sr.Indexes) == 0
+func (ar abnormalRange) IsEmpty() bool {
+	return len(ar.Indexes) == 0
 }
 
-func extractAbnormalSchedules(schedules []PrayerSchedule) (abnormalSummer, abnormalWinter AbnormalRange) {
+func extractAbnormalSchedules(schedules []PrayerSchedule) (abnormalSummer, abnormalWinter abnormalRange) {
 	// If there are no schedules, return empty
 	if len(schedules) == 0 {
 		return
@@ -20,8 +20,8 @@ func extractAbnormalSchedules(schedules []PrayerSchedule) (abnormalSummer, abnor
 
 	// Loop each schedule
 	lastAbnormalIdx := -2
-	var ranges []AbnormalRange
-	var currentRange AbnormalRange
+	var ranges []abnormalRange
+	var currentRange abnormalRange
 	for i, s := range schedules {
 		// If schedule is normal, skip
 		if s.IsNormal {
@@ -39,7 +39,7 @@ func extractAbnormalSchedules(schedules []PrayerSchedule) (abnormalSummer, abnor
 			}
 
 			// Re-initiate current range
-			currentRange = AbnormalRange{
+			currentRange = abnormalRange{
 				Start:   s.Zuhr,
 				End:     s.Zuhr,
 				Indexes: []int{i},
