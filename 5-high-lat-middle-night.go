@@ -1,7 +1,6 @@
 package prayer
 
 import (
-	"math"
 	"time"
 )
 
@@ -27,7 +26,7 @@ func highLatMiddleNight(_ Config, _ int, schedules []Schedule) []Schedule {
 			nightDuration := float64(24*60*60) - dayDuration
 
 			// Calculate Fajr and Isha time
-			halfDuration := time.Duration(math.Floor(nightDuration/2)) * time.Second
+			halfDuration := time.Duration(nightDuration * 0.5 * float64(time.Second))
 			schedules[i].Fajr = s.Sunrise.Add(-halfDuration)
 			schedules[i].Isha = s.Maghrib.Add(halfDuration)
 		}

@@ -71,11 +71,11 @@ func highLatLocalRelativeEstimation(cfg Config, year int, schedules []Schedule) 
 			nightDuration := 24*60*60 - dayDuration
 
 			if !s.IsNormal {
-				fajrDuration := time.Duration(nightDuration*avgFajrPercents) * time.Second
-				schedules[i].Fajr = s.Sunrise.Add(-fajrDuration)
+				fajrDuration := nightDuration * avgFajrPercents * float64(time.Second)
+				schedules[i].Fajr = s.Sunrise.Add(-time.Duration(fajrDuration))
 
-				ishaDuration := time.Duration(nightDuration*avgIshaPercents) * time.Second
-				schedules[i].Isha = s.Maghrib.Add(ishaDuration)
+				ishaDuration := nightDuration * avgIshaPercents * float64(time.Second)
+				schedules[i].Isha = s.Maghrib.Add(time.Duration(ishaDuration))
 			}
 		}
 	}

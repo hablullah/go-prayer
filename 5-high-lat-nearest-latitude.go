@@ -69,8 +69,8 @@ func highLatNearestLatitude(cfg Config, year int, schedules []Schedule) []Schedu
 		// Apply the new durations
 		fajrPercentage := math.Min(nsFajrPercentage, sFajrPercentage)
 		ishaPercentage := math.Min(nsIshaPercentage, sIshaPercentage)
-		fajrDuration := time.Duration(math.Round(sNight * fajrPercentage * float64(time.Second)))
-		ishaDuration := time.Duration(math.Round(sNight * ishaPercentage * float64(time.Second)))
+		fajrDuration := time.Duration(sNight * fajrPercentage * float64(time.Second))
+		ishaDuration := time.Duration(sNight * ishaPercentage * float64(time.Second))
 
 		s.Fajr = s.Sunrise.Add(-fajrDuration)
 		s.Isha = s.Maghrib.Add(ishaDuration)

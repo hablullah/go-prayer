@@ -1,7 +1,6 @@
 package prayer
 
 import (
-	"math"
 	"time"
 )
 
@@ -48,12 +47,14 @@ func highLatAngleBased(cfg Config, year int, schedules []Schedule) []Schedule {
 			nightDuration := float64(24*60*60) - dayDuration
 
 			// Calculate Fajr time
-			fajrDuration := time.Duration(math.Round(nightDuration/60*fajrAngle)) * time.Second
-			schedules[i].Fajr = s.Sunrise.Add(-fajrDuration)
+			fajrPercentage := fajrAngle / 60
+			fajrDuration := nightDuration * fajrPercentage * float64(time.Second)
+			schedules[i].Fajr = s.Sunrise.Add(-time.Duration(fajrDuration))
 
 			// Calculate Isha time
-			ishaDuration := time.Duration(math.Round(nightDuration/60*ishaAngle)) * time.Second
-			schedules[i].Isha = s.Maghrib.Add(ishaDuration)
+			ishaPercentage := ishaAngle / 60
+			ishaDuration := nightDuration * ishaPercentage * float64(time.Second)
+			schedules[i].Isha = s.Maghrib.Add(time.Duration(ishaDuration))
 		}
 	}
 
