@@ -46,13 +46,25 @@ import (
 )
 
 func main() {
-	// Calculate prayer schedule in Jakarta for 2023
+	// Calculate prayer schedule in Jakarta for 2023.
 	asiaJakarta, _ := time.LoadLocation("Asia/Jakarta")
-	schedules, _ := prayer.Calculate(prayer.Config{
-		Latitude:            -6.14,
-		Longitude:           106.81,
-		Timezone:            asiaJakarta,
-		TwilightConvention:  prayer.Kemenag(),
+	jakartaSchedules, _ := prayer.Calculate(prayer.Config{
+		Latitude:           -6.14,
+		Longitude:          106.81,
+		Timezone:           asiaJakarta,
+		TwilightConvention: prayer.Kemenag(),
+		AsrConvention:      prayer.Shafii,
+		PreciseToSeconds:   true,
+	}, 2023)
+
+	// Calculate prayer schedule in London for 2023.
+	// Since London in higher latitude, make sure to enable the adapter.
+	europeLondon, _ := time.LoadLocation("Europe/London")
+	londonSchedules, _ := prayer.Calculate(prayer.Config{
+		Latitude:            51.507222,
+		Longitude:           -0.1275,
+		Timezone:            europeLondon,
+		TwilightConvention:  prayer.ISNA(),
 		AsrConvention:       prayer.Shafii,
 		HighLatitudeAdapter: prayer.NearestLatitude(),
 		PreciseToSeconds:    true,
