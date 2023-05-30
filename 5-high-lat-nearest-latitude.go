@@ -1,7 +1,6 @@
 package prayer
 
 import (
-	"math"
 	"time"
 )
 
@@ -59,19 +58,11 @@ func highLatNearestLatitude(cfg Config, year int, schedules []Schedule) []Schedu
 		// Calculate duration from current schedule
 		s := schedules[i]
 		sDay := s.Maghrib.Sub(s.Sunrise).Seconds()
-		sFajrRise := s.Sunrise.Sub(s.Fajr).Seconds()
-		sMaghribIsha := s.Isha.Sub(s.Maghrib).Seconds()
-
 		sNight := 24*60*60 - sDay
-		sFajrPercentage := sFajrRise / sNight
-		sIshaPercentage := sMaghribIsha / sNight
 
 		// Apply the new durations
-		fajrPercentage := math.Min(nsFajrPercentage, sFajrPercentage)
-		ishaPercentage := math.Min(nsIshaPercentage, sIshaPercentage)
-		fajrDuration := time.Duration(sNight * fajrPercentage * float64(time.Second))
-		ishaDuration := time.Duration(sNight * ishaPercentage * float64(time.Second))
-
+		fajrDuration := time.Duration(sNight * nsFajrPercentage * float64(time.Second))
+		ishaDuration := time.Duration(sNight * nsIshaPercentage * float64(time.Second))
 		s.Fajr = s.Sunrise.Add(-fajrDuration)
 		s.Isha = s.Maghrib.Add(ishaDuration)
 		schedules[i] = s
